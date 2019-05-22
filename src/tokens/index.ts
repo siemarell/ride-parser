@@ -21,12 +21,12 @@ const Keywords = [
 ];
 
 // BRACERS
-const LPar = createToken({name: "LPar", label: "(", pattern: /true/});
-const RPar = createToken({name: "RPar", label: ")", pattern: /false/});
-const LCurly = createToken({name: "LCurly", label: "{", pattern: /true/});
-const RCurly = createToken({name: "RCurly", label: "}", pattern: /false/});
-const LSquare = createToken({name: "LSquare", label: "}", pattern: /false/});
-const RSquare = createToken({name: "RSquare", label: "}", pattern: /false/});
+const LPar = createToken({name: "LPar", label: "(", pattern: /\(/});
+const RPar = createToken({name: "RPar", label: ")", pattern: /\)/});
+const LCurly = createToken({name: "LCurly", label: "{", pattern: /{/});
+const RCurly = createToken({name: "RCurly", label: "}", pattern: /}/});
+const LSquare = createToken({name: "LSquare", label: "[", pattern: /\[/});
+const RSquare = createToken({name: "RSquare", label: "]", pattern: /\]/});
 
 const Brackets = [
     LPar,
@@ -44,6 +44,7 @@ const Booleans = [True, False];
 
 // LITERALS
 const IntegerLiteral = createToken({name: "IntegerLiteral", pattern: /0|[1-9]\d*/});
+const StringLiteral = createToken({name: "StringLiteral", pattern: /"[a-zA-Z0-9]*"/})
 const Base58Literal = createToken({
     name: "Base58Literal",
     pattern: /base58'[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+'/
@@ -51,18 +52,29 @@ const Base58Literal = createToken({
 
 const Literals = [
     IntegerLiteral,
+    StringLiteral,
     Base58Literal
 ];
 
 // OTHER
 const Directive = createToken({name: "Directive", pattern: /{-#(.*)#-}/});
 const Annotation = createToken({name: "Annotation", pattern: /@(Verifier|Callable)/});
+
+
+// Symbols
 const Colon = createToken({name: "Colon", label: ":", pattern: /:/});
 const Comma = createToken({name: "Comma", label: ",", pattern: /,/});
+const Dot =  createToken({name: "Dot", label: ".", pattern: /\./});
 const Arrow = createToken({name: "Arrow", label: "=>", pattern: /=>/});
 const Assignment = createToken({name: "Assignment", label: "=", pattern: /=/});
 
-
+const Symbols = [
+    Colon,
+    Comma,
+    Dot,
+    Arrow,
+    Assignment
+]
 // BOOLEAN OPERATORS
 const GTE = createToken({name: "GTE", label: ">=", pattern: />=/});
 const LTE = createToken({name: "LTE", label: "<=", pattern: /<=/});
@@ -97,16 +109,13 @@ const WhiteSpace = createToken({
 export const allTokens = [
     WhiteSpace,
     Commentary,
-    ...Brackets,
     Directive,
     Annotation,
+    ...Literals,
+    ...Brackets,
     ...Keywords,
     ...Booleans,
     ...BooleanOperators,
     Identifier,
-    ...Literals,
-    Colon,
-    Comma,
-    Arrow,
-    Assignment
+    ...Symbols
 ];
