@@ -1,0 +1,12 @@
+{-# STDLIB_VERSION 3 #-}
+{-# CONTENT_TYPE SCRIPT #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+# Some comment
+let a = 10000
+
+let b = 200
+
+lec c = true
+
+a > b && c
