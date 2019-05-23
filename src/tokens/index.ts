@@ -1,16 +1,16 @@
 import { createToken, Lexer } from 'chevrotain';
-
+import * as Operators from './operators'
 // IDENTIFIER AND KEYWORDS
-const Identifier = createToken({name: "Identifier", pattern: /[a-zA-Z]\w*/});
-const Let = createToken({name: "Let", pattern: /let/, group: "keywords", longer_alt: Identifier});
-const IfElse = createToken({name: "IfElse", pattern: /ifelse/, group: "keywords", longer_alt: Identifier});
-const If = createToken({name: "If", pattern: /if/, group: "keywords", longer_alt: Identifier});
-const Else = createToken({name: "Else", pattern: /else/, group: "keywords", longer_alt: Identifier});
-const Match = createToken({name: "Match", pattern: /match/, group: "keywords", longer_alt: Identifier});
-const Case = createToken({name: "Case", pattern: /case/, group: "keywords", longer_alt: Identifier});
-const Func = createToken({name: "Func", pattern: /func/, group: "keywords", longer_alt: Identifier});
+export const Identifier = createToken({name: "Identifier", pattern: /[a-zA-Z]\w*/});
+export const Let = createToken({name: "Let", pattern: /let/, group: "keywords", longer_alt: Identifier});
+export const IfElse = createToken({name: "IfElse", pattern: /ifelse/, group: "keywords", longer_alt: Identifier});
+export const If = createToken({name: "If", pattern: /if/, group: "keywords", longer_alt: Identifier});
+export const Else = createToken({name: "Else", pattern: /else/, group: "keywords", longer_alt: Identifier});
+export const Match = createToken({name: "Match", pattern: /match/, group: "keywords", longer_alt: Identifier});
+export const Case = createToken({name: "Case", pattern: /case/, group: "keywords", longer_alt: Identifier});
+export const Func = createToken({name: "Func", pattern: /func/, group: "keywords", longer_alt: Identifier});
 
-const Keywords = [
+export const Keywords = [
     Let,
     IfElse,
     If,
@@ -21,14 +21,14 @@ const Keywords = [
 ];
 
 // BRACERS
-const LPar = createToken({name: "LPar", label: "(", pattern: /\(/});
-const RPar = createToken({name: "RPar", label: ")", pattern: /\)/});
-const LCurly = createToken({name: "LCurly", label: "{", pattern: /{/});
-const RCurly = createToken({name: "RCurly", label: "}", pattern: /}/});
-const LSquare = createToken({name: "LSquare", label: "[", pattern: /\[/});
-const RSquare = createToken({name: "RSquare", label: "]", pattern: /\]/});
+export const LPar = createToken({name: "LPar", label: "(", pattern: /\(/});
+export const RPar = createToken({name: "RPar", label: ")", pattern: /\)/});
+export const LCurly = createToken({name: "LCurly", label: "{", pattern: /{/});
+export const RCurly = createToken({name: "RCurly", label: "}", pattern: /}/});
+export const LSquare = createToken({name: "LSquare", label: "[", pattern: /\[/});
+export const RSquare = createToken({name: "RSquare", label: "]", pattern: /\]/});
 
-const Brackets = [
+export const Brackets = [
     LPar,
     RPar,
     LCurly,
@@ -37,70 +37,52 @@ const Brackets = [
     RSquare
 ];
 
-// BOOLEANS
-const True = createToken({name: "True", pattern: /true/});
-const False = createToken({name: "False", pattern: /false/});
-const Booleans = [True, False];
-
 // LITERALS
-const IntegerLiteral = createToken({name: "IntegerLiteral", pattern: /0|[1-9]\d*/});
-const StringLiteral = createToken({name: "StringLiteral", pattern: /"[a-zA-Z0-9]*"/})
-const Base58Literal = createToken({
+export const IntegerLiteral = createToken({name: "IntegerLiteral", pattern: /0|[1-9]\d*/});
+export const StringLiteral = createToken({name: "StringLiteral", pattern: /"[a-zA-Z0-9]*"/});
+export const Base58Literal = createToken({
     name: "Base58Literal",
     pattern: /base58'[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+'/
 });
+export const True = createToken({name: "True", pattern: /true/});
+export const False = createToken({name: "False", pattern: /false/});
 
-const Literals = [
+export const Literals = [
     IntegerLiteral,
     StringLiteral,
-    Base58Literal
+    Base58Literal,
+    True,
+    False
 ];
 
 // OTHER
-const Directive = createToken({name: "Directive", pattern: /{-#(.*)#-}/});
-const Annotation = createToken({name: "Annotation", pattern: /@(Verifier|Callable)/});
+export const Directive = createToken({name: "Directive", pattern: /{-#(.*)#-}/});
+export const Annotation = createToken({name: "Annotation", pattern: /@(Verifier|Callable)/});
 
 
 // Symbols
-const Colon = createToken({name: "Colon", label: ":", pattern: /:/});
-const Comma = createToken({name: "Comma", label: ",", pattern: /,/});
-const Dot =  createToken({name: "Dot", label: ".", pattern: /\./});
-const Arrow = createToken({name: "Arrow", label: "=>", pattern: /=>/});
-const Assignment = createToken({name: "Assignment", label: "=", pattern: /=/});
+export const Colon = createToken({name: "Colon", label: ":", pattern: /:/});
+export const Comma = createToken({name: "Comma", label: ",", pattern: /,/});
+export const Dot = createToken({name: "Dot", label: ".", pattern: /\./});
+export const Arrow = createToken({name: "Arrow", label: "=>", pattern: /=>/});
+export const Assignment = createToken({name: "Assignment", label: "=", pattern: /=/});
 
-const Symbols = [
+export const Symbols = [
     Colon,
     Comma,
     Dot,
     Arrow,
     Assignment
-]
-// BOOLEAN OPERATORS
-const GTE = createToken({name: "GTE", label: ">=", pattern: />=/});
-const LTE = createToken({name: "LTE", label: "<=", pattern: /<=/});
-const GT = createToken({name: "GT", label: ">", pattern: />/});
-const LT = createToken({name: "LT", label: "<", pattern: /</});
-const And = createToken({name: "And", label: "&&", pattern: /&&/});
-const Or = createToken({name: "Or", label: "||", pattern: /\|\|/});
-const Equals = createToken({name: "Equals", label: "==", pattern: /==/});
-
-const BooleanOperators = [
-    GTE,
-    LTE,
-    GT,
-    LT,
-    And,
-    Or,
-    Equals
 ];
 
+
 // SKIP
-const Commentary = createToken({
+export const Commentary = createToken({
     name: "Commentary",
     pattern: /#.*\n/,
     group: Lexer.SKIPPED
 });
-const WhiteSpace = createToken({
+export const WhiteSpace = createToken({
     name: "WhiteSpace",
     pattern: /\s+/,
     group: Lexer.SKIPPED
@@ -114,8 +96,12 @@ export const allTokens = [
     ...Literals,
     ...Brackets,
     ...Keywords,
-    ...Booleans,
-    ...BooleanOperators,
+    ...Operators.All,
+    // BinaryOperator,
     Identifier,
     ...Symbols
 ];
+
+export {
+    Operators
+}
