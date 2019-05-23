@@ -8,8 +8,14 @@
 {-# CONTENT_TYPE EXPRESSION #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
+
 let traderPublicKey = base58'QLMkJYFXsXiLLiKCbVCZZzQQT3whz8PAPdT7w4yQjEn'
 let ownerPublicKey = base58'4gFmmsNv1qA9Krn3pUGbZVcJQTCsXEXhZjEtszDtxMXz'
 let amountAsset = base58'8LLpj6yQLUu37KUt3rVo1S69j2gWMbgbM6qqgt2ac1Vb'
 let matcherPublicKey = base58'7kPFrHDiGw1rCm7LPszuECwWYL3dMf6iMifLRDJQZMzy'
 
+let a = 10
+let b =20
+let c =30
+
+a + b * c
