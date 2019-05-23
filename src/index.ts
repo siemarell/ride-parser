@@ -13,6 +13,6 @@ console.dir(lexingResult, {depth: null})
 
 
 const p = new RideParser();
-// console.log('Parser built')
-// p.input = lexingResult.tokens
-// console.log((p as any).array)
+console.log('Parser built')
+p.input = lexingResult.tokens
+console.log((p as any).array)
