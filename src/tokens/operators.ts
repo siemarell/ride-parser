@@ -5,14 +5,20 @@ import { createToken, Lexer } from 'chevrotain';
 export const BinaryOperator = createToken({name: 'BinaryOperator', pattern: Lexer.NA});
 
 // export const BooleanOperator = createToken({name: 'BooleanOperator', pattern: Lexer.NA});
-export const GTE = createToken({name: "GTE", label: ">=", pattern: />=/, categories: BinaryOperator});
-export const LTE = createToken({name: "LTE", label: "<=", pattern: /<=/, categories: BinaryOperator});
-export const GT = createToken({name: "GT", label: ">", pattern: />/, categories: BinaryOperator});
-export const LT = createToken({name: "LT", label: "<", pattern: /</, categories: BinaryOperator});
-export const And = createToken({name: "And", label: "&&", pattern: /&&/, categories: BinaryOperator});
 export const Or = createToken({name: "Or", label: "||", pattern: /\|\|/, categories: BinaryOperator});
-export const Equals = createToken({name: "Equals", label: "==", pattern: /==/, categories: BinaryOperator});
-export const NotEquals = createToken({name: "NotEquals", label: "!=", pattern: /!=/, categories: BinaryOperator});
+export const And = createToken({name: "And", label: "&&", pattern: /&&/, categories: BinaryOperator});
+
+export const CompareOperator = createToken({name: 'CompareOperator', pattern: Lexer.NA});
+export const GTE = createToken({name: "GTE", label: ">=", pattern: />=/, categories: [BinaryOperator, CompareOperator]});
+export const LTE = createToken({name: "LTE", label: "<=", pattern: /<=/, categories: [BinaryOperator, CompareOperator]});
+export const GT = createToken({name: "GT", label: ">", pattern: />/, categories: BinaryOperator});
+export const LT = createToken({name: "LT", label: "<", pattern: /</, categories: [BinaryOperator, CompareOperator]});
+
+export const EqualityOperator = createToken({name: 'EqualityOperator', pattern: Lexer.NA});
+export const Equals = createToken({name: "Equals", label: "==", pattern: /==/, categories: [BinaryOperator, EqualityOperator]});
+export const NotEquals = createToken({name: "NotEquals", label: "!=", pattern: /!=/, categories: [BinaryOperator, EqualityOperator]});
+
+export const Cons = createToken({name: "Cons", label: "::", pattern: /::/, categories: BinaryOperator});
 
 export const AdditionOperator = createToken({name: "AdditionOperator", pattern: Lexer.NA});
 export const Sum = createToken({name: "Sum", label: "+", pattern: /\+/, categories: [BinaryOperator, AdditionOperator]});
@@ -27,14 +33,17 @@ export const Neg = createToken({name: "Neg", label: "!", pattern: /!/, longer_al
 
 export const All = [
     BinaryOperator,
+    Or,
+    And,
+    CompareOperator,
     GTE,
     LTE,
     GT,
     LT,
-    And,
-    Or,
+    EqualityOperator,
     Equals,
     NotEquals,
+    Cons,
     AdditionOperator,
     Sum,
     Minus,

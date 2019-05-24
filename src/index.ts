@@ -1,4 +1,4 @@
-import {createToken, Lexer}from 'chevrotain';
+import {createToken, Lexer, }from 'chevrotain';
 import * as fs from 'fs'
 import {RideParser} from './parser'
 import {allTokens} from './tokens';
@@ -15,4 +15,5 @@ console.dir(lexingResult, {depth: null})
 const p = new RideParser();
 console.log('Parser built')
 p.input = lexingResult.tokens
-console.log((p as any).array)
+const res = p.SCRIPT()
+console.log(p.errors)

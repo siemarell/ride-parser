@@ -2,13 +2,13 @@ import { createToken, Lexer } from 'chevrotain';
 import * as Operators from './operators'
 // IDENTIFIER AND KEYWORDS
 export const Identifier = createToken({name: "Identifier", pattern: /[a-zA-Z]\w*/});
-export const Let = createToken({name: "Let", pattern: /let/, group: "keywords", longer_alt: Identifier});
-export const IfElse = createToken({name: "IfElse", pattern: /ifelse/, group: "keywords", longer_alt: Identifier});
-export const If = createToken({name: "If", pattern: /if/, group: "keywords", longer_alt: Identifier});
-export const Else = createToken({name: "Else", pattern: /else/, group: "keywords", longer_alt: Identifier});
-export const Match = createToken({name: "Match", pattern: /match/, group: "keywords", longer_alt: Identifier});
-export const Case = createToken({name: "Case", pattern: /case/, group: "keywords", longer_alt: Identifier});
-export const Func = createToken({name: "Func", pattern: /func/, group: "keywords", longer_alt: Identifier});
+export const Let = createToken({name: "Let", pattern: /let/, longer_alt: Identifier});
+export const IfElse = createToken({name: "IfElse", pattern: /ifelse/, longer_alt: Identifier});
+export const If = createToken({name: "If", pattern: /if/, longer_alt: Identifier});
+export const Else = createToken({name: "Else", pattern: /else/, longer_alt: Identifier});
+export const Match = createToken({name: "Match", pattern: /match/, longer_alt: Identifier});
+export const Case = createToken({name: "Case", pattern: /case/, longer_alt: Identifier});
+export const Func = createToken({name: "Func", pattern: /func/, longer_alt: Identifier});
 
 export const Keywords = [
     Let,
@@ -56,12 +56,12 @@ export const Literals = [
 ];
 
 // OTHER
-export const Directive = createToken({name: "Directive", pattern: /{-#(.*)#-}/});
+export const Directive = createToken({name: "Directive", pattern: /{-#(.*)#-}/, group: Lexer.SKIPPED});
 export const Annotation = createToken({name: "Annotation", pattern: /@(Verifier|Callable)/});
 
 
 // Symbols
-export const Colon = createToken({name: "Colon", label: ":", pattern: /:/});
+export const Colon = createToken({name: "Colon", label: ":", pattern: /:/, longer_alt: Operators.Cons});
 export const Comma = createToken({name: "Comma", label: ",", pattern: /,/});
 export const Dot = createToken({name: "Dot", label: ".", pattern: /\./});
 export const Arrow = createToken({name: "Arrow", label: "=>", pattern: /=>/});

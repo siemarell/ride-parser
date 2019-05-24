@@ -1,4 +1,4 @@
-import { Parser } from 'chevrotain';
+import { Parser, IParserConfig } from 'chevrotain';
 import {
     allTokens,
     Annotation,
@@ -12,9 +12,13 @@ import {
     StringLiteral
 } from './tokens';
 
+const rideParserOpts: IParserConfig = {
+    maxLookahead: 1
+};
+
 export class RideParser extends Parser {
     constructor() {
-        super(allTokens);
+        super(allTokens, rideParserOpts);
         this.performSelfAnalysis();
     }
 
@@ -51,8 +55,15 @@ export class RideParser extends Parser {
 
 
     public BLOCK_BODY = this.RULE("BLOCK_BODY", () => {
-        // this.MANY(() => this.SUBRULE(this.DECL));
-        this.SUBRULE(this.EXPR);
+        this.OR([
+            {ALT: () => this.SUBRULE(this.EXPR)},
+            {
+                ALT: () => {
+                    this.SUBRULE(this.LET);
+                    this.SUBRULE(this.BLOCK_BODY);
+                }
+            }
+        ]);
     });
 
     // public BLOCK = this.RULE("BLOCK", () => {
@@ -61,13 +72,70 @@ export class RideParser extends Parser {
     //     this.CONSUME(LCurly);
     // });
 
+    public OR_OP = this.RULE("OR_OP", () => {
+        this.SUBRULE(this.AND_OP, {LABEL: 'LHS'});
+        this.OPTION(() => {
+            this.CONSUME(Operators.Or);
+            this.SUBRULE1(this.OR_OP, {LABEL: 'RHS'});
+        });
+    });
+
+    public AND_OP = this.RULE("AND_OP", () => {
+        this.SUBRULE(this.COMPARE_OP, {LABEL: 'LHS'});
+        this.OPTION(() => {
+            this.CONSUME(Operators.And);
+            this.SUBRULE1(this.AND_OP, {LABEL: 'RHS'});
+        });
+    });
+
+    public COMPARE_OP = this.RULE("COMPARE_OP", () => {
+        this.SUBRULE(this.EQ_OP, {LABEL: 'LHS'});
+        this.OPTION(() => {
+            this.CONSUME(Operators.CompareOperator);
+            this.SUBRULE1(this.COMPARE_OP, {LABEL: 'RHS'});
+        });
+    });
+
+    public EQ_OP = this.RULE("EQ_OP", () => {
+        this.SUBRULE(this.CONS_OP, {LABEL: 'LHS'});
+        this.OPTION(() => {
+            this.CONSUME(Operators.EqualityOperator);
+            this.SUBRULE1(this.EQ_OP, {LABEL: 'RHS'});
+        });
+    });
+
+    public CONS_OP = this.RULE("CONS_OP", () => {
+        this.SUBRULE(this.ADD_OP, {LABEL: 'LHS'});
+        this.OPTION(() => {
+            this.CONSUME(Operators.Cons);
+            this.SUBRULE1(this.CONS_OP, {LABEL: 'RHS'});
+        });
+    });
+
+    public ADD_OP = this.RULE("ADD_OP", () => {
+        this.SUBRULE(this.MUL_OP, {LABEL: 'LHS'});
+        this.OPTION(() => {
+            this.CONSUME(Operators.AdditionOperator);
+            this.SUBRULE1(this.ADD_OP, {LABEL: 'RHS'});
+        });
+    });
+
+    public MUL_OP = this.RULE("MUL_OP", () => {
+        this.SUBRULE(this.ATOM, {LABEL: 'LHS'});
+        this.OPTION(() => {
+            this.CONSUME(Operators.MultiplicationOperator);
+            this.SUBRULE1(this.MUL_OP, {LABEL: 'RHS'});
+        });
+    });
+// 1 :: 2 :: [3]
     public BINARY_OP = this.RULE("BINARY_OP", () => {
         this.SUBRULE(this.ATOM, {LABEL: 'LHS'});
-        this.OPTION(()=> {
+        this.OPTION(() => {
             this.CONSUME(Operators.BinaryOperator);
-            this.SUBRULE1(this.ATOM, {LABEL: 'RHS'})
-        })
+            this.SUBRULE1(this.BINARY_OP, {LABEL: 'RHS'});
+        });
     });
+
 
     public ATOM = this.RULE("ATOM", () => {
         this.OR([
@@ -79,24 +147,27 @@ export class RideParser extends Parser {
                 }
             },
             {
-                ALT: () => this.SUBRULE(this.LITERAL)
+                ALT: () => this.SUBRULE(this.LITERAL),
+            },
+            {
+                ALT: () => this.CONSUME(Identifier)
             }
-        ])
-    })
+        ]);
+    });
 
-    // public DECL = this.RULE("DECL", () => {
-    //     this.OR([
-    //         // {ALT: this.SUBRULE(() => this.FUNC)},
-    //         {ALT: this.SUBRULE(() => this.LET)}
-    //     ]);
-    // });
+    public DECL = this.RULE("DECL", () => {
+        this.OR([
+            // {ALT: this.SUBRULE(() => this.FUNC)},
+            {ALT: this.SUBRULE(() => this.LET)}
+        ]);
+    });
 
-    // public LET = this.RULE("LET", () => {
-    //     this.CONSUME1(Let);
-    //     this.CONSUME2(Identifier);
-    //     this.CONSUME3(Assignment);
-    //     // this.SUBRULE(this.EXPR);
-    // });
+    public LET = this.RULE("LET", () => {
+        this.CONSUME(Let);
+        this.CONSUME(Identifier);
+        this.CONSUME(Assignment);
+        this.SUBRULE(this.EXPR);
+    });
 
     public ANNOTATEDFUNC = this.RULE("ANNOTATEDFUNC", () => {
         this.CONSUME(Annotation);
