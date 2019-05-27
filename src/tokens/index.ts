@@ -50,6 +50,7 @@ export const Comma = createToken({name: "Comma", label: ",", pattern: /,/});
 export const Dot = createToken({name: "Dot", label: ".", pattern: /\./});
 export const Arrow = createToken({name: "Arrow", label: "=>", pattern: /=>/});
 export const Assignment = createToken({name: "Assignment", label: "=", pattern: /=/});
+export const Underscore = createToken({name: "Underscore", label: "_", pattern: /_/});
 
 export const Symbols = [
     Colon,
@@ -57,7 +58,8 @@ export const Symbols = [
     Comma,
     Dot,
     Arrow,
-    Assignment
+    Assignment,
+    Underscore
 ];
 
 

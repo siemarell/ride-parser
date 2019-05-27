@@ -1,19 +1,19 @@
 import { Parser, IParserConfig } from 'chevrotain';
 import {
     allTokens,
-    Annotation,
+    Annotation, Arrow,
     Assignment,
-    Base58Literal, Colon, Comma, False,
+    Base58Literal, Colon, Comma, Dot, False,
     Identifier,
     IntegerLiteral, Keywords,
     LCurly, LPar,
     Operators,
     RCurly, RPar,
-    StringLiteral, True
+    StringLiteral, True, Underscore
 } from './tokens';
 
 const rideParserOpts: IParserConfig = {
-    maxLookahead: 1
+    maxLookahead: 2
 };
 
 export class RideParser extends Parser {
@@ -141,18 +141,6 @@ export class RideParser extends Parser {
         });
     });
 
-    // public UNARY_OP = this.RULE("UNARY_OP", () => {
-    //     this.OR([
-    //         {ALT: () => this.SUBRULE(this.ATOM_EXPR)},
-    //         {
-    //             ALT: () => {
-    //                 this.CONSUME(Operators.UnaryOperator);
-    //                 this.SUBRULE1(this.ATOM_EXPR);
-    //             }
-    //         }
-    //     ]);
-    // });
-
     public PAR_EXPR = this.RULE("PAR_EXPR", () => {
         this.CONSUME(LPar);
         this.SUBRULE1(this.EXPR);
@@ -164,19 +152,28 @@ export class RideParser extends Parser {
             this.CONSUME(Operators.UnaryOperator);
         });
         this.OR([
-            // {ALT: () => this.SUBRULE(this.GETTER)},
+            {ALT: () => this.SUBRULE(this.GETTABLE_EXPR)},
             {ALT: () => this.SUBRULE(this.IF)},
-            // {ALT: () => this.SUBRULE(this.MATCH)},
-            // {ALT: () => this.SUBRULE(this.MATCH_CASE)},
-            // {ALT: () => this.SUBRULE(this.FUNCTION_CALL)},
-            // {ALT: () => this.SUBRULE(this.REF)},
-            {ALT: () => this.SUBRULE(this.BLOCK)},
-            {ALT: () => this.SUBRULE(this.PAR_EXPR)},
+            {ALT: () => this.SUBRULE(this.MATCH)},
             {ALT: () => this.SUBRULE(this.LITERAL)},
-            {ALT: () => this.CONSUME(Identifier)}
         ]);
     });
 
+    public GETTABLE_EXPR = this.RULE("GETTABLE_EXPR", () => {
+        this.OR([
+            {ALT: () => this.SUBRULE(this.PAR_EXPR)},
+            {ALT: () => this.SUBRULE(this.BLOCK)},
+            {ALT: () => this.SUBRULE(this.FUNCTION_CALL)},
+            {ALT: () => this.CONSUME(Identifier)}
+        ]);
+        this.OPTION(() => {
+            this.CONSUME(Dot);
+            this.OR1([
+                {ALT: () => this.SUBRULE1(this.FUNCTION_CALL)},
+                {ALT: () => this.CONSUME1(Identifier)}
+            ]);
+        })
+    });
     public IF = this.RULE("IF", () => {
         this.CONSUME(Keywords.If);
         this.SUBRULE(this.EXPR);
@@ -184,6 +181,40 @@ export class RideParser extends Parser {
         this.SUBRULE1(this.EXPR);
         this.CONSUME(Keywords.Else);
         this.SUBRULE2(this.EXPR);
+    });
+
+    public MATCH = this.RULE("MATCH", () => {
+        this.CONSUME(Keywords.Match);
+        this.SUBRULE(this.EXPR);
+        this.CONSUME(LCurly);
+        this.AT_LEAST_ONE(() => this.SUBRULE(this.MATCH_CASE));
+        this.CONSUME(RCurly);
+    });
+
+    public MATCH_CASE = this.RULE("MATCH_CASE", () => {
+        this.CONSUME(Keywords.Case);
+        this.OR([
+            {
+                ALT: () => {
+                    this.CONSUME(Identifier);
+                    this.CONSUME(Colon);
+                    this.CONSUME1(Identifier);
+                }
+            },
+            {ALT: () => this.CONSUME(Underscore)}
+        ]);
+        this.CONSUME(Arrow);
+        this.SUBRULE(this.EXPR);
+    });
+
+    public FUNCTION_CALL = this.RULE("FUNCTION_CALL", () => {
+        this.CONSUME(Identifier);
+        this.CONSUME(LPar);
+        this.MANY_SEP({
+            SEP: Comma,
+            DEF: () => this.SUBRULE(this.EXPR)
+        });
+        this.CONSUME(RPar);
     });
 
     public LITERAL = this.RULE("LITERAL", () => {

@@ -24,7 +24,24 @@ let e = if a - b > 0 then {
       a - u
     } else d
 
+
+func foo(c: String) = {
+    let b = -c + 12
+    a + b -c
+}
+
+func bar(c: Boolean) = c && true || false
+
 let f = -3 * 13
 
 let g = -3 * -13
+
+let tx1 = (match (tx) {
+        case _ => tx
+}).extract()
+
+let h =  match (tx) {
+    case c1 : TransferTransaction => true
+    case _ => false
+}
 !true
