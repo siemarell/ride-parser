@@ -3,10 +3,10 @@ import {
     allTokens,
     Annotation,
     Assignment,
-    Base58Literal,
+    Base58Literal, Colon, Comma,
     Identifier,
-    IntegerLiteral,
-    LCurly, Let, LPar,
+    IntegerLiteral, Keywords,
+    LCurly, LPar,
     Operators,
     RCurly, RPar,
     StringLiteral
@@ -23,54 +23,67 @@ export class RideParser extends Parser {
     }
 
     public SCRIPT = this.RULE("SCRIPT", () => {
+        this.MANY(() => this.SUBRULE(this.DECL));
         this.OR([
-            //EXPRESSION. На самом деле это не совсем EXPR, так как может быть блоком без скобок^
-            {ALT: () => this.SUBRULE(this.BLOCK_BODY)},
-            //DAPP
-            // {ALT: () => $.SUBRULE($.DAPP)}
+            //EXPRESSION
+            {ALT: () => this.SUBRULE(this.EXPR)},
+            //DAPP. Набор аннотированных функций
+            {ALT: () => this.AT_LEAST_ONE(() => this.SUBRULE(this.ANNOTATEDFUNC))}
         ]);
     });
 
 
     public EXPR = this.RULE("EXPR", () => {
         this.OR([
-            // {ALT: () => this.SUBRULE(this.LITERAL)},
-            // {ALT: () => this.SUBRULE(this.BLOCK)},
-            // {ALT: () => this.SUBRULE(this.GETTER)},
-            // {ALT: () => this.SUBRULE(this.IF)},
-            // {ALT: () => this.SUBRULE(this.MATCH)},
-            // {ALT: () => this.SUBRULE(this.MATCH_CASE)},
-            // {ALT: () => this.SUBRULE(this.FUNCTION_CALL)},
-            // {ALT: () => this.SUBRULE(this.REF)},
             {ALT: () => this.SUBRULE(this.BINARY_OP)},
         ]);
     });
 
-    // public DAPP = this.RULE("DAPP", () => {
-    //     this.MANY(() => {
-    //         this.SUBRULE(this.DECL);
-    //     });
-    //     this.AT_LEAST_ONE(() => this.SUBRULE(this.ANNOTATEDFUNC));
-    // });
-
-
-    public BLOCK_BODY = this.RULE("BLOCK_BODY", () => {
+    public DECL = this.RULE("DECL", () => {
         this.OR([
-            {ALT: () => this.SUBRULE(this.EXPR)},
-            {
-                ALT: () => {
-                    this.SUBRULE(this.LET);
-                    this.SUBRULE(this.BLOCK_BODY);
-                }
-            }
+            {ALT: () => this.SUBRULE(this.FUNC)},
+            {ALT: () => this.SUBRULE(this.LET)}
         ]);
     });
 
-    // public BLOCK = this.RULE("BLOCK", () => {
-    //     this.CONSUME(RCurly);
-    //     this.SUBRULE(this.BLOCK_BODY);
-    //     this.CONSUME(LCurly);
-    // });
+    public FUNC = this.RULE("FUNC", () => {
+        this.CONSUME(Keywords.Func);
+        this.CONSUME(Identifier);
+        this.CONSUME(LPar);
+        this.MANY_SEP({SEP: Comma, DEF: () => this.SUBRULE(this.FUNCTION_ARG)});
+        this.CONSUME(RPar);
+        this.CONSUME(Assignment);
+        this.SUBRULE(this.EXPR);
+    });
+
+    public ANNOTATEDFUNC = this.RULE("ANNOTATEDFUNC", () => {
+        this.CONSUME(Annotation);
+        this.SUBRULE(this.FUNC);
+    });
+
+    public FUNCTION_ARG = this.RULE("FUNCTION_ARG", () => {
+        this.CONSUME(Identifier);
+        this.CONSUME(Colon);
+        this.CONSUME1(Identifier);
+    });
+
+    public LET = this.RULE("LET", () => {
+        this.CONSUME(Keywords.Let);
+        this.CONSUME(Identifier);
+        this.CONSUME(Assignment);
+        this.SUBRULE(this.EXPR);
+    });
+
+    public BLOCK = this.RULE("BLOCK", () => {
+        this.CONSUME(LCurly);
+        this.MANY(() => this.SUBRULE(this.DECL));
+        this.SUBRULE(this.EXPR);
+        this.CONSUME(RCurly);
+    });
+
+    public BINARY_OP = this.RULE("BINARY_OP", () => {
+        this.SUBRULE(this.OR_OP);
+    });
 
     public OR_OP = this.RULE("OR_OP", () => {
         this.SUBRULE(this.AND_OP, {LABEL: 'LHS'});
@@ -121,57 +134,56 @@ export class RideParser extends Parser {
     });
 
     public MUL_OP = this.RULE("MUL_OP", () => {
-        this.SUBRULE(this.ATOM, {LABEL: 'LHS'});
+        this.SUBRULE(this.ATOM_EXPR, {LABEL: 'LHS'});
         this.OPTION(() => {
             this.CONSUME(Operators.MultiplicationOperator);
             this.SUBRULE1(this.MUL_OP, {LABEL: 'RHS'});
         });
     });
-// 1 :: 2 :: [3]
-    public BINARY_OP = this.RULE("BINARY_OP", () => {
-        this.SUBRULE(this.ATOM, {LABEL: 'LHS'});
+
+    // public UNARY_OP = this.RULE("UNARY_OP", () => {
+    //     this.OR([
+    //         {ALT: () => this.SUBRULE(this.ATOM_EXPR)},
+    //         {
+    //             ALT: () => {
+    //                 this.CONSUME(Operators.UnaryOperator);
+    //                 this.SUBRULE1(this.ATOM_EXPR);
+    //             }
+    //         }
+    //     ]);
+    // });
+
+    public PAR_EXPR = this.RULE("PAR_EXPR", () => {
+        this.CONSUME(LPar);
+        this.SUBRULE1(this.EXPR);
+        this.CONSUME(RPar);
+    });
+
+    public ATOM_EXPR = this.RULE("ATOM_EXPR", () => {
         this.OPTION(() => {
-            this.CONSUME(Operators.BinaryOperator);
-            this.SUBRULE1(this.BINARY_OP, {LABEL: 'RHS'});
+            console.log(this.CONSUME(Operators.UnaryOperator));
         });
-    });
-
-
-    public ATOM = this.RULE("ATOM", () => {
         this.OR([
-            {
-                ALT: () => {
-                    this.CONSUME(LPar);
-                    this.SUBRULE1(this.BINARY_OP);
-                    this.CONSUME(RPar);
-                }
-            },
-            {
-                ALT: () => this.SUBRULE(this.LITERAL),
-            },
-            {
-                ALT: () => this.CONSUME(Identifier)
-            }
+            // {ALT: () => this.SUBRULE(this.GETTER)},
+            {ALT: () => this.SUBRULE(this.IF)},
+            // {ALT: () => this.SUBRULE(this.MATCH)},
+            // {ALT: () => this.SUBRULE(this.MATCH_CASE)},
+            // {ALT: () => this.SUBRULE(this.FUNCTION_CALL)},
+            // {ALT: () => this.SUBRULE(this.REF)},
+            {ALT: () => this.SUBRULE(this.BLOCK)},
+            {ALT: () => this.SUBRULE(this.PAR_EXPR)},
+            {ALT: () => this.SUBRULE(this.LITERAL)},
+            {ALT: () => this.CONSUME(Identifier)}
         ]);
     });
 
-    public DECL = this.RULE("DECL", () => {
-        this.OR([
-            // {ALT: this.SUBRULE(() => this.FUNC)},
-            {ALT: this.SUBRULE(() => this.LET)}
-        ]);
-    });
-
-    public LET = this.RULE("LET", () => {
-        this.CONSUME(Let);
-        this.CONSUME(Identifier);
-        this.CONSUME(Assignment);
+    public IF = this.RULE("IF", () => {
+        this.CONSUME(Keywords.If);
         this.SUBRULE(this.EXPR);
-    });
-
-    public ANNOTATEDFUNC = this.RULE("ANNOTATEDFUNC", () => {
-        this.CONSUME(Annotation);
-        // this.SUBRULE(this.FUNC);
+        this.CONSUME(Keywords.Then);
+        this.SUBRULE1(this.EXPR);
+        this.CONSUME(Keywords.Else);
+        this.SUBRULE2(this.EXPR);
     });
 
     public LITERAL = this.RULE("LITERAL", () => {

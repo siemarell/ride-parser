@@ -3,6 +3,7 @@
 import { createToken, Lexer } from 'chevrotain';
 
 export const BinaryOperator = createToken({name: 'BinaryOperator', pattern: Lexer.NA});
+export const UnaryOperator = createToken({name: 'UnaryOperator', pattern: Lexer.NA});
 
 // export const BooleanOperator = createToken({name: 'BooleanOperator', pattern: Lexer.NA});
 export const Or = createToken({name: "Or", label: "||", pattern: /\|\|/, categories: BinaryOperator});
@@ -22,17 +23,18 @@ export const Cons = createToken({name: "Cons", label: "::", pattern: /::/, categ
 
 export const AdditionOperator = createToken({name: "AdditionOperator", pattern: Lexer.NA});
 export const Sum = createToken({name: "Sum", label: "+", pattern: /\+/, categories: [BinaryOperator, AdditionOperator]});
-export const Minus = createToken({name: "Minus", label: "-", pattern: /-/, categories: [BinaryOperator, AdditionOperator]});
+export const Minus = createToken({name: "Minus", label: "-", pattern: /-/, categories: [BinaryOperator, AdditionOperator, UnaryOperator]});
 
 export const MultiplicationOperator = createToken({name: "MultiplicationOperator", pattern: Lexer.NA});
 export const Div = createToken({name: "Div", label: "/", pattern: /\//, categories: [BinaryOperator, MultiplicationOperator]});
 export const Mul = createToken({name: "Mul", label: "*", pattern: /\*/, categories: [BinaryOperator, MultiplicationOperator]});
+export const Mod = createToken({name: "Mod", label: "%", pattern: /%/, categories: [BinaryOperator, MultiplicationOperator]});
 
-export const Mod = createToken({name: "Mod", label: "%", pattern: /%/, categories: BinaryOperator});
-export const Neg = createToken({name: "Neg", label: "!", pattern: /!/, longer_alt: NotEquals});
+export const Neg = createToken({name: "Neg", label: "!", pattern: /!/, longer_alt: NotEquals, categories: UnaryOperator});
 
 export const All = [
     BinaryOperator,
+    UnaryOperator,
     Or,
     And,
     CompareOperator,

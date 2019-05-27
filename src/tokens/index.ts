@@ -1,24 +1,7 @@
 import { createToken, Lexer } from 'chevrotain';
-import * as Operators from './operators'
-// IDENTIFIER AND KEYWORDS
-export const Identifier = createToken({name: "Identifier", pattern: /[a-zA-Z]\w*/});
-export const Let = createToken({name: "Let", pattern: /let/, longer_alt: Identifier});
-export const IfElse = createToken({name: "IfElse", pattern: /ifelse/, longer_alt: Identifier});
-export const If = createToken({name: "If", pattern: /if/, longer_alt: Identifier});
-export const Else = createToken({name: "Else", pattern: /else/, longer_alt: Identifier});
-export const Match = createToken({name: "Match", pattern: /match/, longer_alt: Identifier});
-export const Case = createToken({name: "Case", pattern: /case/, longer_alt: Identifier});
-export const Func = createToken({name: "Func", pattern: /func/, longer_alt: Identifier});
-
-export const Keywords = [
-    Let,
-    IfElse,
-    If,
-    Else,
-    Match,
-    Case,
-    Func
-];
+import * as Operators from './operators';
+import * as Keywords from './keywords';
+import {Identifier} from './keywords';
 
 // BRACERS
 export const LPar = createToken({name: "LPar", label: "(", pattern: /\(/});
@@ -62,6 +45,7 @@ export const Annotation = createToken({name: "Annotation", pattern: /@(Verifier|
 
 // Symbols
 export const Colon = createToken({name: "Colon", label: ":", pattern: /:/, longer_alt: Operators.Cons});
+export const SemiColon = createToken({name: "SemiColon", label: ";", pattern: /;/});
 export const Comma = createToken({name: "Comma", label: ",", pattern: /,/});
 export const Dot = createToken({name: "Dot", label: ".", pattern: /\./});
 export const Arrow = createToken({name: "Arrow", label: "=>", pattern: /=>/});
@@ -93,15 +77,17 @@ export const allTokens = [
     Commentary,
     Directive,
     Annotation,
+    ...Keywords.All,
     ...Literals,
+    Identifier,
     ...Brackets,
-    ...Keywords,
     ...Operators.All,
     // BinaryOperator,
-    Identifier,
     ...Symbols
 ];
 
 export {
-    Operators
+    Operators,
+    Keywords,
+    Identifier
 }

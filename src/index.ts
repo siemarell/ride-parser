@@ -9,11 +9,11 @@ const text = fs.readFileSync('ride.ride', {encoding: 'utf-8'});
 let lexingResult = lexer.tokenize(text);
 
 
-console.dir(lexingResult, {depth: null})
+//console.dir(lexingResult, {depth: null})
 
 
 const p = new RideParser();
 console.log('Parser built')
 p.input = lexingResult.tokens
 const res = p.SCRIPT()
-console.log(p.errors)
+console.dir(p.errors, {depth: null})

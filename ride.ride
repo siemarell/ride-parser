@@ -17,5 +17,10 @@ let matcherPublicKey = base58'7kPFrHDiGw1rCm7LPszuECwWYL3dMf6iMifLRDJQZMzy'
 let a = 10
 let b = 20
 let c = 30
-#2 + 3 * 3
-a + b * c
+let d = 2 + 3 * 3
+
+let e = if a - b > 0 then {
+      let u = 100
+      a - u
+    } else d
+!true
