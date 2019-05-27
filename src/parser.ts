@@ -3,13 +3,13 @@ import {
     allTokens,
     Annotation,
     Assignment,
-    Base58Literal, Colon, Comma,
+    Base58Literal, Colon, Comma, False,
     Identifier,
     IntegerLiteral, Keywords,
     LCurly, LPar,
     Operators,
     RCurly, RPar,
-    StringLiteral
+    StringLiteral, True
 } from './tokens';
 
 const rideParserOpts: IParserConfig = {
@@ -161,7 +161,7 @@ export class RideParser extends Parser {
 
     public ATOM_EXPR = this.RULE("ATOM_EXPR", () => {
         this.OPTION(() => {
-            console.log(this.CONSUME(Operators.UnaryOperator));
+            this.CONSUME(Operators.UnaryOperator);
         });
         this.OR([
             // {ALT: () => this.SUBRULE(this.GETTER)},
@@ -191,6 +191,8 @@ export class RideParser extends Parser {
             {ALT: () => this.CONSUME(IntegerLiteral)},
             {ALT: () => this.CONSUME(StringLiteral)},
             {ALT: () => this.CONSUME(Base58Literal)},
+            {ALT: () => this.CONSUME(True)},
+            {ALT: () => this.CONSUME(False)},
         ]);
     });
 

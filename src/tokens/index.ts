@@ -53,6 +53,7 @@ export const Assignment = createToken({name: "Assignment", label: "=", pattern: 
 
 export const Symbols = [
     Colon,
+    SemiColon,
     Comma,
     Dot,
     Arrow,

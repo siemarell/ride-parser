@@ -12,7 +12,7 @@ export const And = createToken({name: "And", label: "&&", pattern: /&&/, categor
 export const CompareOperator = createToken({name: 'CompareOperator', pattern: Lexer.NA});
 export const GTE = createToken({name: "GTE", label: ">=", pattern: />=/, categories: [BinaryOperator, CompareOperator]});
 export const LTE = createToken({name: "LTE", label: "<=", pattern: /<=/, categories: [BinaryOperator, CompareOperator]});
-export const GT = createToken({name: "GT", label: ">", pattern: />/, categories: BinaryOperator});
+export const GT = createToken({name: "GT", label: ">", pattern: />/, categories: [BinaryOperator, CompareOperator]});
 export const LT = createToken({name: "LT", label: "<", pattern: /</, categories: [BinaryOperator, CompareOperator]});
 
 export const EqualityOperator = createToken({name: 'EqualityOperator', pattern: Lexer.NA});
