@@ -3,20 +3,21 @@ import {
     allTokens,
     Annotation, Arrow,
     Assignment,
-    Base58Literal, Colon, Comma, Dot, False,
+    Base58Literal, Base64Literal, Colon, Comma, Dot, False,
     Identifier,
     IntegerLiteral, Keywords,
-    LCurly, LPar,
+    LCurly, LPar, LSquare,
     Operators,
-    RCurly, RPar,
+    RCurly, RPar, RSquare,
     StringLiteral, True, Underscore
 } from './tokens';
 
 const rideParserOpts: IParserConfig = {
-    maxLookahead: 2
+    maxLookahead: 2,
+    recoveryEnabled: true
 };
 
-export class RideParser extends Parser {
+class RideParser extends Parser {
     constructor() {
         super(allTokens, rideParserOpts);
         this.performSelfAnalysis();
@@ -34,9 +35,7 @@ export class RideParser extends Parser {
 
 
     public EXPR = this.RULE("EXPR", () => {
-        this.OR([
-            {ALT: () => this.SUBRULE(this.BINARY_OP)},
-        ]);
+        this.SUBRULE(this.OR_OP, {LABEL: 'BINARY_OPERATION'});
     });
 
     public DECL = this.RULE("DECL", () => {
@@ -69,9 +68,9 @@ export class RideParser extends Parser {
 
     public LET = this.RULE("LET", () => {
         this.CONSUME(Keywords.Let);
-        this.CONSUME(Identifier);
+        this.CONSUME(Identifier, {LABEL: 'LHS'});
         this.CONSUME(Assignment);
-        this.SUBRULE(this.EXPR);
+        this.SUBRULE(this.EXPR, {LABEL: 'RHS'});
     });
 
     public BLOCK = this.RULE("BLOCK", () => {
@@ -79,10 +78,6 @@ export class RideParser extends Parser {
         this.MANY(() => this.SUBRULE(this.DECL));
         this.SUBRULE(this.EXPR);
         this.CONSUME(RCurly);
-    });
-
-    public BINARY_OP = this.RULE("BINARY_OP", () => {
-        this.SUBRULE(this.OR_OP);
     });
 
     public OR_OP = this.RULE("OR_OP", () => {
@@ -172,7 +167,7 @@ export class RideParser extends Parser {
                 {ALT: () => this.SUBRULE1(this.FUNCTION_CALL)},
                 {ALT: () => this.CONSUME1(Identifier)}
             ]);
-        })
+        });
     });
     public IF = this.RULE("IF", () => {
         this.CONSUME(Keywords.If);
@@ -217,14 +212,31 @@ export class RideParser extends Parser {
         this.CONSUME(RPar);
     });
 
+    public LIST_LITERAL = this.RULE("LIST_LITERAL", () => {
+        this.CONSUME(LSquare);
+        this.OPTION(() => {
+            this.SUBRULE(this.EXPR);
+            this.MANY(() => {
+                this.CONSUME(Comma);
+                this.SUBRULE1(this.EXPR);
+            })
+        });
+        this.CONSUME(RSquare);
+    });
+
     public LITERAL = this.RULE("LITERAL", () => {
         this.OR([
             {ALT: () => this.CONSUME(IntegerLiteral)},
             {ALT: () => this.CONSUME(StringLiteral)},
             {ALT: () => this.CONSUME(Base58Literal)},
+            {ALT: () => this.CONSUME(Base64Literal)},
             {ALT: () => this.CONSUME(True)},
             {ALT: () => this.CONSUME(False)},
+            {
+                ALT: () => this.SUBRULE(this.LIST_LITERAL)
+            }
         ]);
     });
-
 }
+
+export const rideParser =  new RideParser();

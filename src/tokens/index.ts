@@ -27,6 +27,11 @@ export const Base58Literal = createToken({
     name: "Base58Literal",
     pattern: /base58'[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+'/
 });
+
+export const Base64Literal = createToken({
+    name: "Base64Literal",
+    pattern:/base64'[[A-Za-z0-9+/=]+/
+});
 export const True = createToken({name: "True", pattern: /true/});
 export const False = createToken({name: "False", pattern: /false/});
 
@@ -34,6 +39,7 @@ export const Literals = [
     IntegerLiteral,
     StringLiteral,
     Base58Literal,
+    Base64Literal,
     True,
     False
 ];
