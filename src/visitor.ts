@@ -62,6 +62,18 @@ const FUNC_LTE = ({
     returns: 'Boolean'
 });
 
+const FUNC_LOGIC_NEG = ({
+    name: 'FUNC_LOGIC_NEG',
+    args: ['Boolean'],
+    returns: 'Boolean'
+});
+
+const FUNC_NEG = ({
+    name: 'FUNC_NEG',
+    args: ['Int'],
+    returns: 'Int'
+});
+
 const operatorFunctions: Record<string, any> = {
     '&&': FUNC_AND,
     '||': FUNC_OR,
@@ -69,7 +81,9 @@ const operatorFunctions: Record<string, any> = {
     '>': FUNC_GT,
     '<': FUNC_LT,
     '>=': FUNC_GTE,
-    '<=': FUNC_LTE
+    '<=': FUNC_LTE,
+    '!': FUNC_LOGIC_NEG,
+    '-': FUNC_NEG
 };
 
 type TPos = {
@@ -103,7 +117,7 @@ class RideVisitor extends RideVisitorConstructor {
 
     currentSymbolTable = this.rootSymbolTable;
 
-    private BINARY_OPERATION = (cst: any) => {
+    private $BINARY_OPERATION = (cst: any) => {
         const leftResult = this.visit(cst.LHS);
         if (cst.RHS) {
             const rightResult = this.visit(cst.RHS);
@@ -126,33 +140,10 @@ class RideVisitor extends RideVisitorConstructor {
 
 
     EXPR(cst: any) {
-        return this.visit(cst.BINARY_OPERATION);
-    }
-
-    OR_OP = this.BINARY_OPERATION;
-
-    AND_OP = this.BINARY_OPERATION;
-
-    COMPARE_OP = this.BINARY_OPERATION;
-
-    EQ_OP = this.BINARY_OPERATION;
-
-    CONS_OP = this.BINARY_OPERATION;
-
-    ADD_OP = this.BINARY_OPERATION;
-
-    MUL_OP = this.BINARY_OPERATION;
-
-    ATOM_EXPR(cst: any) {
-        return this.visit(cst);
-    }
-
-    PAR_EXPR(cst: any) {
-        return this.visit(cst);
-    }
-
-    GETTABLE_EXPR(cst: any) {
-        return this.visit(cst);
+        if ('BINARY_OPERATION' in cst){
+            return this.visit(cst.BINARY_OPERATION);
+        }
+        return null
     }
 
     LET(cst: any) {
@@ -164,6 +155,56 @@ class RideVisitor extends RideVisitorConstructor {
         this.currentSymbolTable.values[identifier.image] = identifier;
     }
 
+    OR_OP = this.$BINARY_OPERATION;
+
+    AND_OP = this.$BINARY_OPERATION;
+
+    COMPARE_OP = this.$BINARY_OPERATION;
+
+    EQ_OP = this.$BINARY_OPERATION;
+
+    CONS_OP = this.$BINARY_OPERATION;
+
+    ADD_OP = this.$BINARY_OPERATION;
+
+    MUL_OP = this.$BINARY_OPERATION;
+
+    PAR_EXPR(cst: any) {
+        return this.visit(cst['EXPR']);
+    }
+
+    ATOM_EXPR(cst: any) {
+        let result = this.visit(cst.ATOM);
+
+        if ('UnaryOperator' in cst){
+            result = {
+                FUNCTION_CALL: operatorFunctions[cst['UnaryOperator'][0].image],
+                ARGS: [result]
+            }
+        }
+        return result;
+    }
+
+    GETTABLE_EXPR(cst: any) {
+        if ('FUNCTION_CALL' in cst){
+            cst['FUNCTION_CALL'][0].children.FUNCTION_ARGS.unshift(cst['ITEM'][0])
+            return this.visit(cst.FUNCTION_CALL)
+        }else {
+            const item = this.visit(cst['ITEM']);
+            if ('FIELD_ACCESS' in cst){
+                return {
+                    ITEM: item,
+                    FIELD_ACCESS: this.visit(cst.FIELD_ACCESS),
+                }
+            }
+            return item
+        }
+    }
+
+    FUNCTION_CALL(ctx: any){
+
+        console.log(123)
+    }
     LITERAL(ctx: any) {
         if ('Base64Literal' in ctx) {
             return 'ByteVector';

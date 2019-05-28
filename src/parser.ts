@@ -147,27 +147,27 @@ class RideParser extends Parser {
             this.CONSUME(Operators.UnaryOperator);
         });
         this.OR([
-            {ALT: () => this.SUBRULE(this.GETTABLE_EXPR)},
-            {ALT: () => this.SUBRULE(this.IF)},
-            {ALT: () => this.SUBRULE(this.MATCH)},
-            {ALT: () => this.SUBRULE(this.LITERAL)},
+            {ALT: () => this.SUBRULE(this.GETTABLE_EXPR, {LABEL: 'ATOM'})},
+            {ALT: () => this.SUBRULE(this.IF, {LABEL: 'ATOM'})},
+            {ALT: () => this.SUBRULE(this.MATCH, {LABEL: 'ATOM'})},
+            {ALT: () => this.SUBRULE(this.LITERAL, {LABEL: 'ATOM'})},
         ]);
     });
 
     public GETTABLE_EXPR = this.RULE("GETTABLE_EXPR", () => {
         this.OR([
-            {ALT: () => this.SUBRULE(this.PAR_EXPR)},
-            {ALT: () => this.SUBRULE(this.BLOCK)},
-            {ALT: () => this.SUBRULE(this.FUNCTION_CALL)},
-            {ALT: () => this.CONSUME(Identifier)}
+            {ALT: () => this.SUBRULE(this.PAR_EXPR, {LABEL: 'ITEM'})},
+            {ALT: () => this.SUBRULE(this.BLOCK, {LABEL: 'ITEM'})},
+            {ALT: () => this.SUBRULE(this.FUNCTION_CALL, {LABEL: 'ITEM'})},
+            {ALT: () => this.CONSUME(Identifier, {LABEL: 'ITEM'})}
         ]);
         this.OPTION(() => {
             this.CONSUME(Dot);
             this.OR1([
                 {ALT: () => this.SUBRULE1(this.FUNCTION_CALL)},
-                {ALT: () => this.CONSUME1(Identifier)}
+                {ALT: () => this.CONSUME1(Identifier, {LABEL:'FIELD_ACCESS'})}
             ]);
-        });
+        },);
     });
     public IF = this.RULE("IF", () => {
         this.CONSUME(Keywords.If);
@@ -203,11 +203,11 @@ class RideParser extends Parser {
     });
 
     public FUNCTION_CALL = this.RULE("FUNCTION_CALL", () => {
-        this.CONSUME(Identifier);
+        this.CONSUME(Identifier, {LABEL: 'FUNCTION_NAME'});
         this.CONSUME(LPar);
         this.MANY_SEP({
             SEP: Comma,
-            DEF: () => this.SUBRULE(this.EXPR)
+            DEF: () => this.SUBRULE(this.EXPR, {LABEL:'FUNCTION_ARGS'})
         });
         this.CONSUME(RPar);
     });
@@ -219,7 +219,7 @@ class RideParser extends Parser {
             this.MANY(() => {
                 this.CONSUME(Comma);
                 this.SUBRULE1(this.EXPR);
-            })
+            });
         });
         this.CONSUME(RSquare);
     });
@@ -239,4 +239,4 @@ class RideParser extends Parser {
     });
 }
 
-export const rideParser =  new RideParser();
+export const rideParser = new RideParser();
