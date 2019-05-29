@@ -94,11 +94,7 @@ type TRange = {
     start: TPos
     end: TPos
 }
-type TIdentifier = {
-    name: string
-    type: string
-    pos: TRange
-}
+type TIdentifier = any
 type TSymbolTable = {
     parent: TSymbolTable | null
     children: TSymbolTable[]
@@ -147,12 +143,15 @@ class RideVisitor extends RideVisitorConstructor {
     }
 
     LET(cst: any) {
-        const lhs = cst.LHS[0];
-        const rhs = cst.RHS[0];
-        const identifier = lhs;
-        console.log(this.visit(rhs));
-        identifier.type = this.visit(rhs);
-        this.currentSymbolTable.values[identifier.image] = identifier;
+        const identifier = cst.LHS[0];
+        const value = this.visit(cst.RHS);
+        if (this.currentSymbolTable.values[identifier.image]){
+            console.error('Duplicate identifier')
+        }
+        this.currentSymbolTable.values[identifier.image] = {
+            identifier,
+            value
+        };
     }
 
     OR_OP = this.$BINARY_OPERATION;
@@ -202,22 +201,44 @@ class RideVisitor extends RideVisitorConstructor {
     }
 
     FUNCTION_CALL(ctx: any){
-
-        console.log(123)
+        console.log('asd')
     }
+
+    LIST_LITERAL(cst:any){
+        console.log('asd')
+    }
+
     LITERAL(ctx: any) {
         if ('Base64Literal' in ctx) {
-            return 'ByteVector';
+            return {
+                TYPE:'ByteVector',
+                LITERAL: ctx.Base64Literal
+            };
         } else if ('Base58Literal' in ctx) {
-            return 'ByteVector';
+            return {
+                TYPE:'ByteVector',
+                LITERAL: ctx.Base58Literal
+            };
         } else if ('IntegerLiteral' in ctx) {
-            return 'Int';
+            return {
+                TYPE:'Int',
+                LITERAL: ctx.IntegerLiteral
+            };
         } else if ('StringLiteral' in ctx) {
-            return 'String';
+            return {
+                TYPE:'String',
+                LITERAL: ctx.StringLiteral
+            };
         } else if ('BooleanLiteral' in ctx) {
-            return 'Boolean';
+            return {
+                TYPE:'Boolean',
+                LITERAL: ctx.BooleanLiteral
+            };
         } else if ('LIST_LITERAL' in ctx) {
-            return 'List[T]';
+            return {
+                TYPE:'LIST',
+                ITEMS: this.visit(ctx.LIST_LITERAL),
+            };
         } else {
             return 'Unknown';
         }

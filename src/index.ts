@@ -13,11 +13,15 @@ let lexingResult = lexer.tokenize(text);
 //console.dir(lexingResult, {depth: null})
 
 
-console.log('Parser built')
-p.input = lexingResult.tokens
-const cst = p.SCRIPT()
-const v = rideVisitor.visit(cst)
-console.log(rideVisitor)
+
+console.log('Parser built');
+p.input = lexingResult.tokens;
+const cst = p.SCRIPT();
+const v = rideVisitor.visit(cst);
+const st = rideVisitor.rootSymbolTable;
+
+console.log(st);
+console.log(123)
 // console.dir(cst.children.DECL[0], {depth: 8})
 // console.dir(cst, {depth: 8})
 //console.log(v)

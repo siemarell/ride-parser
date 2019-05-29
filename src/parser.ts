@@ -83,7 +83,7 @@ class RideParser extends Parser {
     public OR_OP = this.RULE("OR_OP", () => {
         this.SUBRULE(this.AND_OP, {LABEL: 'LHS'});
         this.OPTION(() => {
-            this.CONSUME(Operators.Or);
+            this.CONSUME(Operators.Or, {LABEL: 'OPERATOR'});
             this.SUBRULE1(this.OR_OP, {LABEL: 'RHS'});
         });
     });
@@ -91,7 +91,7 @@ class RideParser extends Parser {
     public AND_OP = this.RULE("AND_OP", () => {
         this.SUBRULE(this.COMPARE_OP, {LABEL: 'LHS'});
         this.OPTION(() => {
-            this.CONSUME(Operators.And);
+            this.CONSUME(Operators.And, {LABEL: 'OPERATOR'});
             this.SUBRULE1(this.AND_OP, {LABEL: 'RHS'});
         });
     });
@@ -99,7 +99,7 @@ class RideParser extends Parser {
     public COMPARE_OP = this.RULE("COMPARE_OP", () => {
         this.SUBRULE(this.EQ_OP, {LABEL: 'LHS'});
         this.OPTION(() => {
-            this.CONSUME(Operators.CompareOperator);
+            this.CONSUME(Operators.CompareOperator, {LABEL: 'OPERATOR'});
             this.SUBRULE1(this.COMPARE_OP, {LABEL: 'RHS'});
         });
     });
@@ -107,7 +107,7 @@ class RideParser extends Parser {
     public EQ_OP = this.RULE("EQ_OP", () => {
         this.SUBRULE(this.CONS_OP, {LABEL: 'LHS'});
         this.OPTION(() => {
-            this.CONSUME(Operators.EqualityOperator);
+            this.CONSUME(Operators.EqualityOperator, {LABEL: 'OPERATOR'});
             this.SUBRULE1(this.EQ_OP, {LABEL: 'RHS'});
         });
     });
@@ -123,7 +123,7 @@ class RideParser extends Parser {
     public ADD_OP = this.RULE("ADD_OP", () => {
         this.SUBRULE(this.MUL_OP, {LABEL: 'LHS'});
         this.OPTION(() => {
-            this.CONSUME(Operators.AdditionOperator);
+            this.CONSUME(Operators.AdditionOperator, {LABEL: 'OPERATOR'});
             this.SUBRULE1(this.ADD_OP, {LABEL: 'RHS'});
         });
     });
@@ -131,7 +131,7 @@ class RideParser extends Parser {
     public MUL_OP = this.RULE("MUL_OP", () => {
         this.SUBRULE(this.ATOM_EXPR, {LABEL: 'LHS'});
         this.OPTION(() => {
-            this.CONSUME(Operators.MultiplicationOperator);
+            this.CONSUME(Operators.MultiplicationOperator, {LABEL: 'OPERATOR'});
             this.SUBRULE1(this.MUL_OP, {LABEL: 'RHS'});
         });
     });
@@ -214,13 +214,17 @@ class RideParser extends Parser {
 
     public LIST_LITERAL = this.RULE("LIST_LITERAL", () => {
         this.CONSUME(LSquare);
-        this.OPTION(() => {
-            this.SUBRULE(this.EXPR);
-            this.MANY(() => {
-                this.CONSUME(Comma);
-                this.SUBRULE1(this.EXPR);
-            });
-        });
+        this.MANY_SEP({
+            SEP: Comma,
+            DEF: (this.SUBRULE(this.EXPR, {LABEL: 'LIST_ITEMS'}))
+        })
+        // this.OPTION(() => {
+        //     this.SUBRULE(this.EXPR);
+        //     this.MANY(() => {
+        //         this.CONSUME(Comma);
+        //         this.SUBRULE1(this.EXPR);
+        //     });
+        // });
         this.CONSUME(RSquare);
     });
 
