@@ -8,6 +8,16 @@ import { CstNode } from 'chevrotain';
 
 const RideVisitorConstructor = rideParser.getBaseCstVisitorConstructor();
 
+function extractPosition(token: any) {
+    return {
+        startOffset: token.startOffset,
+        endOffset: token.endOffset,
+        startLine: token.startLine,
+        endLine: token.endLine,
+        startColumn: token.startColumn,
+        endColumn: token.endColumn,
+    }
+}
 class RideVisitor extends RideVisitorConstructor {
     rootSymbolTable = new SymbolTable();
 
@@ -42,7 +52,7 @@ class RideVisitor extends RideVisitorConstructor {
             //     func = func(rightResult);
             // }
             const res: TFunctionCall = {
-                position: op,
+                position: extractPosition(op),
                 func: op.image,
                 args: [leftResult, rightResult]
             };
@@ -104,7 +114,7 @@ class RideVisitor extends RideVisitorConstructor {
         this.symbolTableStack.pop();
 
         return {
-            position: identifier,
+            position: extractPosition(identifier),
             name: identifier.image,
             args,
             resultType,
@@ -151,7 +161,7 @@ class RideVisitor extends RideVisitorConstructor {
         };
         this.currentSymbolTable.addDeclaration({
             ...result,
-            position: identifier,
+            position: extractPosition(identifier),
             value: null
         });
 
@@ -162,7 +172,7 @@ class RideVisitor extends RideVisitorConstructor {
         const identifier = this.visit(cst.VAR_NAME);
         const value = this.visit(cst.VAR_VALUE);
         return {
-            position: identifier,
+            position: extractPosition(identifier),
             name: identifier.image,
             value,
             type: this.$DEFINE_TYPE(value)
@@ -200,7 +210,7 @@ class RideVisitor extends RideVisitorConstructor {
         if ('UnaryOperator' in cst) {
             const op = cst.UnaryOperator[0];
             result = {
-                position: op,
+                position: extractPosition(op),
                 func: op.image === '-' ? 'FUNC_NEG' : op.image,
                 args: [result]
             } as TFunctionCall;
@@ -217,7 +227,7 @@ class RideVisitor extends RideVisitorConstructor {
             if ('FIELD_ACCESS' in cst) {
                 const accessId = this.visit(cst.FIELD_ACCESS);
                 const res: TFieldAccess = {
-                    position: accessId,
+                    position: extractPosition(accessId),
                     item: item,
                     fieldAccess: this.visit(cst.FIELD_ACCESS),
                 };
@@ -240,7 +250,7 @@ class RideVisitor extends RideVisitorConstructor {
         const funcId = this.visit(cst.FUNCTION_NAME);
         const args = this.visitArr(cst.FUNCTION_ARGS);
         return {
-            position: funcId,
+            position: extractPosition(funcId),
             func: funcId.image,
             args
         };
@@ -250,40 +260,47 @@ class RideVisitor extends RideVisitorConstructor {
         console.log('asd');
     }
 
-    LITERAL(ctx: any) {
-        if ('Base64Literal' in ctx) {
+    LITERAL(cst: any): TLiteral {
+        if ('Base64Literal' in cst) {
             return {
+                position: extractPosition(cst.Base64Literal[0]),
                 type: 'ByteVector',
-                value: ctx.Base64Literal
+                value: cst.Base64Literal
             };
-        } else if ('Base58Literal' in ctx) {
+        } else if ('Base58Literal' in cst) {
             return {
+                position: extractPosition(cst.Base58Literal[0]),
                 type: 'ByteVector',
-                value: ctx.Base58Literal
+                value: cst.Base58Literal
             };
-        } else if ('IntegerLiteral' in ctx) {
+        } else if ('IntegerLiteral' in cst) {
             return {
+                position: extractPosition(cst.IntegerLiteral[0]),
                 type: 'Int',
-                value: ctx.IntegerLiteral
+                value: parseInt(cst.IntegerLiteral[0].image)
             };
-        } else if ('StringLiteral' in ctx) {
+        } else if ('StringLiteral' in cst) {
             return {
+                position: extractPosition(cst.StringLiteral[0]),
                 type: 'String',
-                value: ctx.StringLiteral
+                value: cst.StringLiteral[0].image
             };
-        } else if ('BooleanLiteral' in ctx) {
+        } else if ('BooleanLiteral' in cst) {
             return {
+                position: extractPosition(cst.BooleanLiteral[0]),
                 type: 'Boolean',
-                value: ctx.BooleanLiteral
+                value: cst.BooleanLiteral[0].image === 'true'
             };
-        } else if ('LIST_LITERAL' in ctx) {
-            const val = this.visit(ctx.LIST_LITERAL);
+        } else if ('LIST_LITERAL' in cst) {
+            const val = this.visit(cst.LIST_LITERAL);
             return {
+                position: extractPosition(cst.LIST_LITERAL[0]),
                 type: 'LIST',
                 value: val
             };
         } else {
             return {
+                position: null as any,
                 type: 'Unknown',
                 value: 'Unknown'
             };
@@ -297,7 +314,7 @@ class RideVisitor extends RideVisitorConstructor {
     REFERENCE(cst: any) {
         return {
             ref: cst.Identifier[0].image,
-            position: cst.Identifier[0]}
+            position: extractPosition(cst.Identifier[0])}
     }
 }
 
