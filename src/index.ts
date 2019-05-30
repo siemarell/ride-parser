@@ -18,10 +18,8 @@ console.log('Parser built');
 p.input = lexingResult.tokens;
 const cst = p.SCRIPT();
 const v = rideVisitor.visit(cst);
-const st = rideVisitor.rootSymbolTable;
 
-console.log(st);
-console.log(123)
+console.log(v);
 // console.dir(cst.children.DECL[0], {depth: 8})
 // console.dir(cst, {depth: 8})
 //console.log(v)

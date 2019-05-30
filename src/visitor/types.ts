@@ -1,9 +1,14 @@
 import {TType, TPrimitive, TUnion, TStruct, TFunction, TFunctionArgument} from '@waves/ride-js'
 
-type TPos = {
-    row: number
-    col: number
+export type TPos = {
+    startOffset: number,
+    endOffset: number,
+    startLine: number,
+    endLine: number,
+    startColumn: number,
+    endColumn: number,
 }
+
 type TRange = {
     start: TPos
     end: TPos
@@ -12,37 +17,55 @@ type TRange = {
 // export interface INode {
 //     range: TRange
 // }
-export interface IReference {
-    kind: 'REFERENCE'
+export type TRef = string
+// export interface IFunctionCall {
+//     kind: 'FUNCTION_CALL'
+// }
+//
+// export interface IFieldAccess {
+//     kind: 'FIELD_ACCESS'
+// }
+//
+// export interface IIfElse {
+//     kind: 'IF_ELSE'
+// }
+//
+// export interface IMatch {
+//     kind: 'MATCH'
+// }
+//
+// export interface IMatchCase {
+//     kind: 'MATCH_CASE'
+// }
+
+export type TFieldAccess = {
+    position: TPos
+    item: TRef | TFunctionCall
+    fieldAccess: string
 }
 
-export interface IFunctionCall {
-    kind: 'FUNCTION_CALL'
+export type TFunctionCall = {
+    position: TPos,
+    func: TRef,
+    args: TRef[]
 }
 
-export interface IFieldAccess {
-    kind: 'FIELD_ACCESS'
+export type TVaribleDeclaration = {
+    position: TPos,
+    name: string,
+    type: TType,
+    value: any,
 }
 
-export interface IIfElse {
-    kind: 'IF_ELSE'
-}
-
-export interface IMatch {
-    kind: 'MATCH'
-}
-
-export interface IMatchCase {
-    kind: 'MATCH_CASE'
-}
-
-export interface IDeclaration {
-    position: TRange
+export type TFunctionDeclaration = {
+    position: TPos
     name: string
-    type: TType | TFunction
+    args: {name: string, type: TType}[]
+    resultType: TType
     value: any
 }
 
+export type TDeclaration = TVaribleDeclaration | TFunctionDeclaration
 //
 // export interface IFunctionDeclaration extends IDeclaration {
 //     type:  TFunction

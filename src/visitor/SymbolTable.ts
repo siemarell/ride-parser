@@ -6,15 +6,15 @@ export default class SymbolTable {
 
     constructor(public parent?: SymbolTable) {
         if (parent != null){
-            parent.children.push(this)
+            parent.children.push(this);
         }
     }
 
-    addDeclaration(decl: any){
-        if(this.values[decl.name]!==null){
-            console.error("Duplicate Identifier")
+    addDeclaration(decl: TDeclaration){
+        if(this.values[decl.name] != null){
+            console.error("Duplicate Identifier");
         }else {
-            this.values[decl.name] = decl
+            this.values[decl.name] = decl;
         }
     }
 }

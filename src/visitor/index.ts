@@ -1,6 +1,10 @@
+import { TFunctionArgument } from '@waves/ride-js';
+
 import { rideParser } from '../parser';
 import SymbolTable from './SymbolTable';
-import { operatorFunctions } from './operatorFunctions';
+import { binaryOperators, unaryOperators } from './operatorFunctions';
+import { TFieldAccess, TFunctionCall, TFunctionDeclaration, TVaribleDeclaration } from './types';
+import { CstNode } from 'chevrotain';
 
 const RideVisitorConstructor = rideParser.getBaseCstVisitorConstructor();
 
@@ -9,22 +13,25 @@ class RideVisitor extends RideVisitorConstructor {
 
     symbolTableStack = [this.rootSymbolTable];
 
-    get currentSymbolTable(){
-        return this.symbolTableStack[this.symbolTableStack.length -1]
+    get currentSymbolTable() {
+        return this.symbolTableStack[this.symbolTableStack.length - 1];
     }
 
     private $BINARY_OPERATION = (cst: any) => {
         const leftResult = this.visit(cst.LHS);
         if (cst.RHS) {
             const rightResult = this.visit(cst.RHS);
-            let func = operatorFunctions[cst.OPERATOR[0].image];
+            const op = cst.OPERATOR[0];
+            let func = binaryOperators[op.image];
             if (typeof func === 'function') {
                 func = func(rightResult);
             }
-            return {
-                FUNCTION_CALL: func,
-                ARGS: [leftResult, rightResult]
+            const res: TFunctionCall = {
+                position: op,
+                func: func.name,
+                args: [leftResult, rightResult]
             };
+            return res;
         } else return leftResult;
     };
 
@@ -34,9 +41,22 @@ class RideVisitor extends RideVisitorConstructor {
         this.validateVisitor();
     }
 
+    // visit(nodes: CstNode | CstNode[], opts?: any){
+    //     if (Array.isArray(nodes) && nodes.length > 1){
+    //         return nodes.map((node:any) => super.visit(node))
+    //     }else {
+    //         return super.visit(nodes, opts)
+    //     }
+    // }
+
+    visitArr(nodes: CstNode[], opts?: any){
+        return (nodes || []).map((node:any) => super.visit(node, opts))
+    }
+
     SCRIPT(cst: any) {
-        this.visit(cst.DECL);
-        const publicFunctions = this.visit(cst.ANNOTATEDFUNC);
+        //cst.DECL.forEach((dec:any) => this.visit(dec))
+        this.visitArr(cst.DECL);
+        const publicFunctions = this.visitArr(cst.ANNOTATEDFUNC);
         const expression = this.visit(cst.EXPR);
 
         return {
@@ -55,57 +75,96 @@ class RideVisitor extends RideVisitorConstructor {
 
     DECL(cst: any) {
         const decl = this.visit(cst.DECLARATION);
-        this.currentSymbolTable.addDeclaration(decl)
-        if (this.currentSymbolTable.values[decl.name]) {
-            console.error('Duplicate identifier');
-        }
-        this.currentSymbolTable.values[decl.name] = decl;
+        this.currentSymbolTable.addDeclaration(decl);
     }
 
-    FUNC(cst: any, injectedVariables: any[]) {
+    FUNC(cst: any, injectedVariables?: TVaribleDeclaration[]): TFunctionDeclaration {
         const identifier = this.visit(cst.FUNCTION_NAME);
 
         this.symbolTableStack.push(new SymbolTable(this.currentSymbolTable));
 
-        if (injectedVariables){
+        // Inject varibles to scope. E.g.: annotated functions
+        if (injectedVariables) {
             injectedVariables.forEach(variable =>
-                this.currentSymbolTable.addDeclaration(variable))
+                this.currentSymbolTable.addDeclaration(variable));
         }
 
-        const body = this.visit(cst.FUNCTION_BODY);
-        const args = this.visit(cst.FUNCTION_ARG);
+        const {type, value} = this.visit(cst.FUNCTION_BODY);
+        const args = this.visitArr(cst.FUNCTION_ARG);
 
         this.symbolTableStack.pop();
 
         return {
+            position: identifier,
             name: identifier.image,
-            identifier,
-            body,
-            args
+            args: args,
+            resultType: type,
+            value: null
         };
     }
 
-    ANNOTATEDFUNC(cst: any) {
-        let inectVar;
+    ANNOTATEDFUNC(cst: any): TFunctionDeclaration {
+        let injectVar: TVaribleDeclaration;
+        const injectIdentifier = this.visit(cst.IDENTIFIER);
         switch (cst.Annotation[0].image) {
             case '@Callable':
-
+                injectVar = {
+                    position: injectIdentifier,
+                    name: injectIdentifier.image,
+                    type: 'Invocation',
+                    value: null
+                };
+                break;
+            case '@Verifier':
+                injectVar = {
+                    position: injectIdentifier,
+                    name: injectIdentifier.image,
+                    type: 'Transaction',
+                    value: null
+                };
+                break;
+            default:
+                return null as any;
         }
-        const annName = cst.Annotation[0].image
-
-
+        return this.FUNC(cst.FUNC[0], [injectVar]);
     }
 
-    LET(cst: any) {
-        const identifier = this.visit(cst.VAR_NAME);
-        const value = this.visit(cst.VAR_VALUE);
-        if (this.currentSymbolTable.values[identifier.image]) {
-            console.error('Duplicate identifier');
-        }
-        this.currentSymbolTable.values[identifier.image] = {
-            identifier,
-            value
+    FUNCTION_ARG(cst: any): TFunctionArgument {
+        const identifier = this.visit(cst.ARG_NAME);
+        const typeIdentifier = this.visit(cst.ARG_TYPE);
+
+        const result = {
+            //position: identifier,
+            doc: '',
+            name: identifier.image,
+            type: typeIdentifier.image,
+            // value: null
         };
+        this.currentSymbolTable.addDeclaration({
+            ...result,
+            position: identifier,
+            value: null
+        });
+
+        return result;
+    }
+
+    LET(cst: any): TVaribleDeclaration {
+        const identifier = this.visit(cst.VAR_NAME);
+        const {value, type} = this.visit(cst.VAR_VALUE);
+        return {
+            position: identifier,
+            name: identifier.image,
+            value,
+            type
+        };
+    }
+
+    BLOCK(cst: any) {
+        this.symbolTableStack.push(new SymbolTable(this.currentSymbolTable));
+        this.visitArr(cst.BLOCK_DECLARATIONS);
+        this.symbolTableStack.pop();
+        return this.visit(cst.BLOCK_VALUE);
     }
 
     OR_OP = this.$BINARY_OPERATION;
@@ -130,10 +189,12 @@ class RideVisitor extends RideVisitorConstructor {
         let result = this.visit(cst.ATOM);
 
         if ('UnaryOperator' in cst) {
+            const op = cst.UnaryOperator[0];
             result = {
-                FUNCTION_CALL: operatorFunctions[cst['UnaryOperator'][0].image],
-                ARGS: [result]
-            };
+                position: op,
+                func: unaryOperators[op.image].name,
+                args: [result]
+            } as TFunctionCall;
         }
         return result;
     }
@@ -145,17 +206,32 @@ class RideVisitor extends RideVisitorConstructor {
         } else {
             const item = this.visit(cst['ITEM']);
             if ('FIELD_ACCESS' in cst) {
-                return {
-                    ITEM: item,
-                    FIELD_ACCESS: this.visit(cst.FIELD_ACCESS),
+                const accessId = this.visit(cst.FIELD_ACCESS);
+                const res: TFieldAccess = {
+                    position: accessId,
+                    item: item,
+                    fieldAccess: this.visit(cst.FIELD_ACCESS),
                 };
+                return res;
             }
             return item;
         }
     }
 
-    FUNCTION_CALL(ctx: any) {
-        console.log('asd');
+    IF(cst: any){}
+
+    MATCH(cst: any){}
+
+    MATCH_CASE(cst: any){}
+
+    FUNCTION_CALL(cst: any): TFunctionCall {
+        const funcId = this.visit(cst.FUNCTION_NAME);
+        const args = this.visitArr(cst.FUNCTION_ARGS);
+        return {
+            position: funcId,
+            func: funcId.image,
+            args
+        };
     }
 
     LIST_LITERAL(cst: any) {
@@ -165,33 +241,34 @@ class RideVisitor extends RideVisitorConstructor {
     LITERAL(ctx: any) {
         if ('Base64Literal' in ctx) {
             return {
-                TYPE: 'ByteVector',
-                LITERAL: ctx.Base64Literal
+                type: 'ByteVector',
+                value: ctx.Base64Literal
             };
         } else if ('Base58Literal' in ctx) {
             return {
-                TYPE: 'ByteVector',
-                LITERAL: ctx.Base58Literal
+                type: 'ByteVector',
+                value: ctx.Base58Literal
             };
         } else if ('IntegerLiteral' in ctx) {
             return {
-                TYPE: 'Int',
-                LITERAL: ctx.IntegerLiteral
+                type: 'Int',
+                value: ctx.IntegerLiteral
             };
         } else if ('StringLiteral' in ctx) {
             return {
-                TYPE: 'String',
-                LITERAL: ctx.StringLiteral
+                type: 'String',
+                value: ctx.StringLiteral
             };
         } else if ('BooleanLiteral' in ctx) {
             return {
-                TYPE: 'Boolean',
-                LITERAL: ctx.BooleanLiteral
+                type: 'Boolean',
+                value: ctx.BooleanLiteral
             };
         } else if ('LIST_LITERAL' in ctx) {
+            const val = this.visit(ctx.LIST_LITERAL);
             return {
-                TYPE: 'LIST',
-                ITEMS: this.visit(ctx.LIST_LITERAL),
+                type: 'LIST',
+                value: val
             };
         } else {
             return 'Unknown';
