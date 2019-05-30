@@ -33,50 +33,52 @@ class RideParser extends Parser {
         ]);
     });
 
-
     public EXPR = this.RULE("EXPR", () => {
         this.SUBRULE(this.OR_OP, {LABEL: 'BINARY_OPERATION'});
     });
 
     public DECL = this.RULE("DECL", () => {
         this.OR([
-            {ALT: () => this.SUBRULE(this.FUNC)},
-            {ALT: () => this.SUBRULE(this.LET)}
+            {ALT: () => this.SUBRULE(this.FUNC, {LABEL:'DECLARATION'})},
+            {ALT: () => this.SUBRULE(this.LET, {LABEL:'DECLARATION'})}
         ]);
     });
 
     public FUNC = this.RULE("FUNC", () => {
         this.CONSUME(Keywords.Func);
-        this.CONSUME(Identifier);
+        this.SUBRULE(this.IDENTIFIER,{LABEL: 'FUNCTION_NAME'});
         this.CONSUME(LPar);
         this.MANY_SEP({SEP: Comma, DEF: () => this.SUBRULE(this.FUNCTION_ARG)});
         this.CONSUME(RPar);
         this.CONSUME(Assignment);
-        this.SUBRULE(this.EXPR);
+        this.SUBRULE(this.EXPR, {LABEL: 'FUNCTION_BODY'});
     });
 
     public ANNOTATEDFUNC = this.RULE("ANNOTATEDFUNC", () => {
         this.CONSUME(Annotation);
+        this.CONSUME(LPar);
+        this.SUBRULE(this.IDENTIFIER);
+        this.CONSUME(RPar);
         this.SUBRULE(this.FUNC);
     });
 
     public FUNCTION_ARG = this.RULE("FUNCTION_ARG", () => {
-        this.CONSUME(Identifier);
+        this.SUBRULE(this.IDENTIFIER,{LABEL: 'ARG_NAME'});
         this.CONSUME(Colon);
-        this.CONSUME1(Identifier);
+        this.SUBRULE1(this.IDENTIFIER,{LABEL: 'ARG_TYPE'});
     });
 
     public LET = this.RULE("LET", () => {
         this.CONSUME(Keywords.Let);
-        this.CONSUME(Identifier, {LABEL: 'LHS'});
+        this.SUBRULE(this.IDENTIFIER,{LABEL: 'VAR_NAME'});
         this.CONSUME(Assignment);
-        this.SUBRULE(this.EXPR, {LABEL: 'RHS'});
+        this.SUBRULE(this.EXPR, {LABEL: 'VAR_VALUE'});
     });
 
     public BLOCK = this.RULE("BLOCK", () => {
         this.CONSUME(LCurly);
-        this.MANY(() => this.SUBRULE(this.DECL));
-        this.SUBRULE(this.EXPR);
+        this.MANY(() => this.SUBRULE(this.DECL, {LABEL: 'BLOCK_DECLARATIONS'}));
+        this.SUBRULE(this.EXPR, {LABEL: 'BLOCK_VALUE'});
         this.CONSUME(RCurly);
     });
 
@@ -159,28 +161,29 @@ class RideParser extends Parser {
             {ALT: () => this.SUBRULE(this.PAR_EXPR, {LABEL: 'ITEM'})},
             {ALT: () => this.SUBRULE(this.BLOCK, {LABEL: 'ITEM'})},
             {ALT: () => this.SUBRULE(this.FUNCTION_CALL, {LABEL: 'ITEM'})},
-            {ALT: () => this.CONSUME(Identifier, {LABEL: 'ITEM'})}
+            {ALT: () => this.SUBRULE(this.IDENTIFIER,{LABEL: 'ITEM'})}
         ]);
         this.OPTION(() => {
             this.CONSUME(Dot);
             this.OR1([
                 {ALT: () => this.SUBRULE1(this.FUNCTION_CALL)},
-                {ALT: () => this.CONSUME1(Identifier, {LABEL:'FIELD_ACCESS'})}
+                {ALT: () =>  this.SUBRULE1(this.IDENTIFIER,{LABEL: 'FIELD_ACCESS'})}
             ]);
         },);
     });
+
     public IF = this.RULE("IF", () => {
         this.CONSUME(Keywords.If);
-        this.SUBRULE(this.EXPR);
+        this.SUBRULE(this.EXPR, {LABEL: 'CONDITION_EXPR'});
         this.CONSUME(Keywords.Then);
-        this.SUBRULE1(this.EXPR);
+        this.SUBRULE1(this.EXPR, {LABEL: 'THEN_EXPR'});
         this.CONSUME(Keywords.Else);
-        this.SUBRULE2(this.EXPR);
+        this.SUBRULE2(this.EXPR, {LABEL: 'ELSE_EXPR'});
     });
 
     public MATCH = this.RULE("MATCH", () => {
         this.CONSUME(Keywords.Match);
-        this.SUBRULE(this.EXPR);
+        this.SUBRULE(this.EXPR, {LABEL: 'MATCH_EXPR'});
         this.CONSUME(LCurly);
         this.AT_LEAST_ONE(() => this.SUBRULE(this.MATCH_CASE));
         this.CONSUME(RCurly);
@@ -191,9 +194,9 @@ class RideParser extends Parser {
         this.OR([
             {
                 ALT: () => {
-                    this.CONSUME(Identifier);
+                    this.SUBRULE(this.IDENTIFIER,{LABEL: 'CASE_VAR'});
                     this.CONSUME(Colon);
-                    this.CONSUME1(Identifier);
+                    this.SUBRULE1(this.IDENTIFIER,{LABEL: 'CASE_TYPE'})
                 }
             },
             {ALT: () => this.CONSUME(Underscore)}
@@ -203,7 +206,7 @@ class RideParser extends Parser {
     });
 
     public FUNCTION_CALL = this.RULE("FUNCTION_CALL", () => {
-        this.CONSUME(Identifier, {LABEL: 'FUNCTION_NAME'});
+        this.SUBRULE(this.IDENTIFIER, {LABEL: 'FUNCTION_NAME'});
         this.CONSUME(LPar);
         this.MANY_SEP({
             SEP: Comma,
@@ -240,6 +243,10 @@ class RideParser extends Parser {
                 ALT: () => this.SUBRULE(this.LIST_LITERAL)
             }
         ]);
+    });
+
+    public IDENTIFIER = this.RULE("IDENTIFIER", () => {
+        this.CONSUME(Identifier)
     });
 }
 
