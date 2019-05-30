@@ -161,7 +161,7 @@ class RideParser extends Parser {
             {ALT: () => this.SUBRULE(this.PAR_EXPR, {LABEL: 'ITEM'})},
             {ALT: () => this.SUBRULE(this.BLOCK, {LABEL: 'ITEM'})},
             {ALT: () => this.SUBRULE(this.FUNCTION_CALL, {LABEL: 'ITEM'})},
-            {ALT: () => this.SUBRULE(this.IDENTIFIER,{LABEL: 'ITEM'})}
+            {ALT: () => this.SUBRULE(this.REFERENCE,{LABEL: 'ITEM'})}
         ]);
         this.OPTION(() => {
             this.CONSUME(Dot);
@@ -246,6 +246,10 @@ class RideParser extends Parser {
     });
 
     public IDENTIFIER = this.RULE("IDENTIFIER", () => {
+        this.CONSUME(Identifier)
+    });
+
+    public REFERENCE = this.RULE("REFERENCE", () => {
         this.CONSUME(Identifier)
     });
 }

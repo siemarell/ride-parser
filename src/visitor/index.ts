@@ -99,14 +99,15 @@ class RideVisitor extends RideVisitorConstructor {
 
         const value = this.visit(cst.FUNCTION_BODY);
         const args = this.visitArr(cst.FUNCTION_ARG);
+        const resultType = this.$DEFINE_TYPE(value);
 
         this.symbolTableStack.pop();
 
         return {
             position: identifier,
             name: identifier.image,
-            args: args,
-            resultType: this.$DEFINE_TYPE(value),
+            args,
+            resultType,
             value
         };
     }
@@ -291,6 +292,12 @@ class RideVisitor extends RideVisitorConstructor {
 
     IDENTIFIER(cst: any) {
         return cst.Identifier[0];
+    }
+
+    REFERENCE(cst: any) {
+        return {
+            ref: cst.Identifier[0].image,
+            position: cst.Identifier[0]}
     }
 }
 
