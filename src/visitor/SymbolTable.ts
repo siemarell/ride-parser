@@ -1,4 +1,8 @@
 import { TDeclaration } from './types';
+import { binaryOperators, unaryOperators } from './operatorFunctions';
+
+
+const globalSymbols: Record<string, TDeclaration> = { ...binaryOperators, ...unaryOperators};
 
 export default class SymbolTable {
     children: SymbolTable[] = [];
@@ -16,5 +20,15 @@ export default class SymbolTable {
         }else {
             this.values[decl.name] = decl;
         }
+    }
+
+    getDeclarationByName(name: string): TDeclaration | null{
+        return globalSymbols[name] ||
+            this.values[name] ||
+            (this.parent && this.parent.getDeclarationByName(name))
+    }
+
+    _getDeclByName(name: string){
+        return this.values[name] || (this.parent && this.parent.getDeclarationByName(name))
     }
 }

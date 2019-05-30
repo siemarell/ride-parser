@@ -1,29 +1,29 @@
+import {TType} from '@waves/ride-js'
 
 
-
-const Union = (...args: any[]) => {
-    if (args.length === 0) return 'Unit';
-    else if (args.length === 1) return args[0];
-    return args;
+const Union = (...types: TType[]) => {
+    if (types.length === 0) return 'Unit';
+    else if (types.length === 1) return types[0];
+    return types;
 };
 
 
 
-const FUNC_AND = (...args: any) => ({
-    name: `FUNC_AND[${args[1].type}]`,
-    args: ['Boolean', args[1].type],
-    resultType: Union('Boolean', args[1].type)
+const FUNC_AND = (...types: TType[]) => ({
+    name: `FUNC_AND[${types[1]}]`,
+    args: ['Boolean', types[1]],
+    resultType: Union('Boolean', types[1])
 });
 
-const FUNC_OR = (...args: any) => ({
-    name: `FUNC_OR[${args[1].type}]`,
-    args: ['Boolean', args[1].type],
-    resultType: Union('Boolean', args[1].type)
+const FUNC_OR = (...types: TType[]) => ({
+    name: `FUNC_OR[${types[1]}]`,
+    args: ['Boolean', types[1]],
+    resultType: Union('Boolean', types[1])
 });
 
-const FUNC_EQ = (...args: any) => ({
-    name: `FUNC_EQ[${args[1].type}]`,
-    args: [args[0].type, args[1].type],
+const FUNC_EQ = (...types: TType[]) => ({
+    name: `FUNC_EQ[${types[0]}]`,
+    args: [types[0], types[0]],
     resultType: 'Boolean'
 });
 
@@ -107,5 +107,6 @@ export const binaryOperators: Record<string, any> = {
 
 export const unaryOperators: Record<string, any> = {
     '!': FUNC_LOGIC_NEG,
-    '-': FUNC_NEG,
+    // Use 'NEG' key to remove ambiguity with FUNC_SUB. Key is replaced in visitor
+    'FUNC_NEG': FUNC_NEG,
 }

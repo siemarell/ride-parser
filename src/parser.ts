@@ -9,7 +9,7 @@ import {
     LCurly, LPar, LSquare,
     Operators,
     RCurly, RPar, RSquare,
-    StringLiteral, True, Underscore
+    StringLiteral, BooleanLiteral, Underscore
 } from './tokens';
 
 const rideParserOpts: IParserConfig = {
@@ -237,8 +237,8 @@ class RideParser extends Parser {
             {ALT: () => this.CONSUME(StringLiteral)},
             {ALT: () => this.CONSUME(Base58Literal)},
             {ALT: () => this.CONSUME(Base64Literal)},
-            {ALT: () => this.CONSUME(True)},
-            {ALT: () => this.CONSUME(False)},
+            {ALT: () => this.CONSUME(BooleanLiteral)},
+            // {ALT: () => this.CONSUME(False)},
             {
                 ALT: () => this.SUBRULE(this.LIST_LITERAL)
             }

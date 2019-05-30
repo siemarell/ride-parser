@@ -1,9 +1,9 @@
-import { TFunctionArgument } from '@waves/ride-js';
+import { TFunctionArgument, TType } from '@waves/ride-js';
 
 import { rideParser } from '../parser';
 import SymbolTable from './SymbolTable';
 import { binaryOperators, unaryOperators } from './operatorFunctions';
-import { TFieldAccess, TFunctionCall, TFunctionDeclaration, TVaribleDeclaration } from './types';
+import { TFieldAccess, TFunctionCall, TFunctionDeclaration, TLiteral, TRef, TVaribleDeclaration } from './types';
 import { CstNode } from 'chevrotain';
 
 const RideVisitorConstructor = rideParser.getBaseCstVisitorConstructor();
@@ -17,18 +17,33 @@ class RideVisitor extends RideVisitorConstructor {
         return this.symbolTableStack[this.symbolTableStack.length - 1];
     }
 
+    private $DEFINE_TYPE(x: TFunctionCall | TLiteral | TRef): TType {
+        if ('type' in x) {
+            return x.type;
+        } else if('ref' in x) {
+            const decl = this.currentSymbolTable.getDeclarationByName(x.ref) as TVaribleDeclaration | null;
+            return decl == null ? 'Unknown' : decl.type;
+        } else {
+            const decl = this.currentSymbolTable.getDeclarationByName(x.func) as TFunctionDeclaration | null;
+            if(decl == null) return 'Unknown'
+            return typeof decl === 'function' ?
+                decl(...x.args.map(ref => this.$DEFINE_TYPE(ref))).resultType :
+                decl.resultType
+        }
+    }
+
     private $BINARY_OPERATION = (cst: any) => {
         const leftResult = this.visit(cst.LHS);
         if (cst.RHS) {
             const rightResult = this.visit(cst.RHS);
             const op = cst.OPERATOR[0];
-            let func = binaryOperators[op.image];
-            if (typeof func === 'function') {
-                func = func(rightResult);
-            }
+           // let func = binaryOperators[op.image];
+            // if (typeof func === 'function') {
+            //     func = func(rightResult);
+            // }
             const res: TFunctionCall = {
                 position: op,
-                func: func.name,
+                func: op.image,
                 args: [leftResult, rightResult]
             };
             return res;
@@ -41,16 +56,9 @@ class RideVisitor extends RideVisitorConstructor {
         this.validateVisitor();
     }
 
-    // visit(nodes: CstNode | CstNode[], opts?: any){
-    //     if (Array.isArray(nodes) && nodes.length > 1){
-    //         return nodes.map((node:any) => super.visit(node))
-    //     }else {
-    //         return super.visit(nodes, opts)
-    //     }
-    // }
 
-    visitArr(nodes: CstNode[], opts?: any){
-        return (nodes || []).map((node:any) => super.visit(node, opts))
+    visitArr(nodes: CstNode[], opts?: any) {
+        return (nodes || []).map((node: any) => super.visit(node, opts));
     }
 
     SCRIPT(cst: any) {
@@ -89,7 +97,7 @@ class RideVisitor extends RideVisitorConstructor {
                 this.currentSymbolTable.addDeclaration(variable));
         }
 
-        const {type, value} = this.visit(cst.FUNCTION_BODY);
+        const value = this.visit(cst.FUNCTION_BODY);
         const args = this.visitArr(cst.FUNCTION_ARG);
 
         this.symbolTableStack.pop();
@@ -98,8 +106,8 @@ class RideVisitor extends RideVisitorConstructor {
             position: identifier,
             name: identifier.image,
             args: args,
-            resultType: type,
-            value: null
+            resultType: this.$DEFINE_TYPE(value),
+            value
         };
     }
 
@@ -151,12 +159,12 @@ class RideVisitor extends RideVisitorConstructor {
 
     LET(cst: any): TVaribleDeclaration {
         const identifier = this.visit(cst.VAR_NAME);
-        const {value, type} = this.visit(cst.VAR_VALUE);
+        const value = this.visit(cst.VAR_VALUE);
         return {
             position: identifier,
             name: identifier.image,
             value,
-            type
+            type: this.$DEFINE_TYPE(value)
         };
     }
 
@@ -192,7 +200,7 @@ class RideVisitor extends RideVisitorConstructor {
             const op = cst.UnaryOperator[0];
             result = {
                 position: op,
-                func: unaryOperators[op.image].name,
+                func: op.image === '-' ? 'FUNC_NEG' : op.image,
                 args: [result]
             } as TFunctionCall;
         }
@@ -218,11 +226,14 @@ class RideVisitor extends RideVisitorConstructor {
         }
     }
 
-    IF(cst: any){}
+    IF(cst: any) {
+    }
 
-    MATCH(cst: any){}
+    MATCH(cst: any) {
+    }
 
-    MATCH_CASE(cst: any){}
+    MATCH_CASE(cst: any) {
+    }
 
     FUNCTION_CALL(cst: any): TFunctionCall {
         const funcId = this.visit(cst.FUNCTION_NAME);
@@ -271,7 +282,10 @@ class RideVisitor extends RideVisitorConstructor {
                 value: val
             };
         } else {
-            return 'Unknown';
+            return {
+                type: 'Unknown',
+                value: 'Unknown'
+            };
         }
     }
 

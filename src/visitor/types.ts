@@ -17,27 +17,15 @@ type TRange = {
 // export interface INode {
 //     range: TRange
 // }
-export type TRef = string
-// export interface IFunctionCall {
-//     kind: 'FUNCTION_CALL'
-// }
-//
-// export interface IFieldAccess {
-//     kind: 'FIELD_ACCESS'
-// }
-//
-// export interface IIfElse {
-//     kind: 'IF_ELSE'
-// }
-//
-// export interface IMatch {
-//     kind: 'MATCH'
-// }
-//
-// export interface IMatchCase {
-//     kind: 'MATCH_CASE'
-// }
-
+export type TRef = {
+    position: TPos
+    ref: string
+}
+export type TLiteral = {
+    position: TPos,
+    type: string,
+    value: any
+}
 export type TFieldAccess = {
     position: TPos
     item: TRef | TFunctionCall
@@ -46,7 +34,7 @@ export type TFieldAccess = {
 
 export type TFunctionCall = {
     position: TPos,
-    func: TRef,
+    func: string,
     args: TRef[]
 }
 
@@ -57,14 +45,16 @@ export type TVaribleDeclaration = {
     value: any,
 }
 
-export type TFunctionDeclaration = {
+export type TFunctionArgDeclaration = {name: string, type: TType}
+export type TFunctionDeclarationBasic = {
     position: TPos
     name: string
-    args: {name: string, type: TType}[]
+    args: TFunctionArgDeclaration[]
     resultType: TType
     value: any
 }
-
+export type TFunctionDeclarationGeneric = (...args: TType[]) => TFunctionDeclarationBasic
+export type TFunctionDeclaration = TFunctionDeclarationBasic | TFunctionDeclarationGeneric
 export type TDeclaration = TVaribleDeclaration | TFunctionDeclaration
 //
 // export interface IFunctionDeclaration extends IDeclaration {

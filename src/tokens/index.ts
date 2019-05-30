@@ -1,7 +1,7 @@
 import { createToken, Lexer } from 'chevrotain';
 import * as Operators from './operators';
 import * as Keywords from './keywords';
-import {Identifier} from './keywords';
+import { Identifier } from './keywords';
 
 // BRACERS
 export const LPar = createToken({name: "LPar", label: "(", pattern: /\(/});
@@ -30,16 +30,18 @@ export const Base58Literal = createToken({
 
 export const Base64Literal = createToken({
     name: "Base64Literal",
-    pattern:/base64'[[A-Za-z0-9+/=]+/
+    pattern: /base64'[[A-Za-z0-9+/=]+/
 });
-export const True = createToken({name: "True", pattern: /true/});
-export const False = createToken({name: "False", pattern: /false/});
+export const BooleanLiteral = createToken({name: 'BooleanLiteral', pattern: Lexer.NA});
+export const True = createToken({name: "True", pattern: /true/, categories: BooleanLiteral});
+export const False = createToken({name: "False", pattern: /false/, categories: BooleanLiteral});
 
 export const Literals = [
     IntegerLiteral,
     StringLiteral,
     Base58Literal,
     Base64Literal,
+    BooleanLiteral,
     True,
     False
 ];
@@ -99,4 +101,4 @@ export {
     Operators,
     Keywords,
     Identifier
-}
+};

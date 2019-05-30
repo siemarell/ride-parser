@@ -19,7 +19,7 @@ p.input = lexingResult.tokens;
 const cst = p.SCRIPT();
 const v = rideVisitor.visit(cst);
 
-console.log(v);
+console.dir(v, {depth: null});
 // console.dir(cst.children.DECL[0], {depth: 8})
 // console.dir(cst, {depth: 8})
 //console.log(v)
