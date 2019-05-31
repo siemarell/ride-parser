@@ -24,3 +24,4 @@ console.dir(v, {depth: null});
 // console.dir(cst, {depth: 8})
 //console.log(v)
 //console.dir(p.errors, {depth: null})
+//Getter Literal functionCall reference

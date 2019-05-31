@@ -3,7 +3,15 @@ import { TFunctionArgument, TType } from '@waves/ride-js';
 import { rideParser } from '../parser';
 import SymbolTable from './SymbolTable';
 import { binaryOperators, unaryOperators } from './operatorFunctions';
-import { TFieldAccess, TFunctionCall, TFunctionDeclaration, TLiteral, TRef, TVaribleDeclaration } from './types';
+import {
+    TError,
+    TFieldAccess,
+    TFunctionCall,
+    TFunctionDeclaration,
+    TLiteral,
+    TRef,
+    TVaribleDeclaration
+} from './types';
 import { CstNode } from 'chevrotain';
 
 const RideVisitorConstructor = rideParser.getBaseCstVisitorConstructor();
@@ -16,29 +24,52 @@ function extractPosition(token: any) {
         endLine: token.endLine,
         startColumn: token.startColumn,
         endColumn: token.endColumn,
-    }
+    };
 }
+
 class RideVisitor extends RideVisitorConstructor {
     rootSymbolTable = new SymbolTable();
 
     symbolTableStack = [this.rootSymbolTable];
 
+    errors: TError[] = [];
+
     get currentSymbolTable() {
         return this.symbolTableStack[this.symbolTableStack.length - 1];
     }
 
-    private $DEFINE_TYPE(x: TFunctionCall | TLiteral | TRef): TType {
-        if ('type' in x) {
-            return x.type;
-        } else if('ref' in x) {
-            const decl = this.currentSymbolTable.getDeclarationByName(x.ref) as TVaribleDeclaration | null;
-            return decl == null ? 'Unknown' : decl.type;
-        } else {
-            const decl = this.currentSymbolTable.getDeclarationByName(x.func) as TFunctionDeclaration | null;
-            if(decl == null) return 'Unknown'
-            return typeof decl === 'function' ?
-                decl(...x.args.map(ref => this.$DEFINE_TYPE(ref))).resultType :
-                decl.resultType
+    private $DEFINE_TYPE(typelessNode: Omit<TFunctionCall, "type"> | Omit<TFieldAccess, "type"> | Omit<TRef, "type">): TType {
+        if ('func' in typelessNode) {
+
+            const decl = this.currentSymbolTable.getDeclarationByName(typelessNode.func) as TFunctionDeclaration | null;
+            if (decl == null) {
+                const {position} = typelessNode;
+                this.errors.push({
+                    position,
+                    message: `Unresolved identifier '${typelessNode.func}`
+                });
+                return 'Unknown';
+            } else {
+                return typeof decl === 'function' ?
+                    decl(...typelessNode.args.map(arg => arg.type)).resultType :
+                    decl.resultType;
+            }
+        }
+        else if ('ref' in typelessNode) {
+            const decl = this.currentSymbolTable.getDeclarationByName(typelessNode.ref) as TVaribleDeclaration | null;
+            if (decl == null) {
+                const {position} = typelessNode;
+                this.errors.push({
+                    position,
+                    message: `Unresolved identifier '${typelessNode.ref}`
+                });
+                return 'Unknown';
+            } else {
+                return decl.type;
+            }
+        }
+        else /*if ('fieldAccess' in typelessNode)*/ {
+            return 'Unknown';
         }
     }
 
@@ -47,10 +78,7 @@ class RideVisitor extends RideVisitorConstructor {
         if (cst.RHS) {
             const rightResult = this.visit(cst.RHS);
             const op = cst.OPERATOR[0];
-           // let func = binaryOperators[op.image];
-            // if (typeof func === 'function') {
-            //     func = func(rightResult);
-            // }
+
             const res: TFunctionCall = {
                 position: extractPosition(op),
                 func: op.image,
@@ -311,10 +339,16 @@ class RideVisitor extends RideVisitorConstructor {
         return cst.Identifier[0];
     }
 
-    REFERENCE(cst: any) {
-        return {
+    REFERENCE(cst: any): TRef {
+        const typelessNode = {
+            position: extractPosition(cst.Identifier[0]),
             ref: cst.Identifier[0].image,
-            position: extractPosition(cst.Identifier[0])}
+        };
+
+        return {
+            ...typelessNode,
+            type: this.$DEFINE_TYPE(typelessNode)
+        };
     }
 }
 

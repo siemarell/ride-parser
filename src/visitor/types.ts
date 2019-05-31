@@ -1,5 +1,9 @@
 import {TType, TPrimitive, TUnion, TStruct, TFunction, TFunctionArgument} from '@waves/ride-js'
 
+export type TError = {
+    position: TPos,
+    message: string
+}
 export type TPos = {
     startOffset: number,
     endOffset: number,
@@ -17,27 +21,39 @@ type TRange = {
 // export interface INode {
 //     range: TRange
 // }
+
+// AST Types
 export type TRef = {
     position: TPos
     ref: string
+    type: TType
 }
+
 export type TLiteral = {
     position: TPos,
-    type: string,
     value: any
+    type: TType,
 }
+
 export type TFieldAccess = {
     position: TPos
     item: TRef | TFunctionCall
     fieldAccess: string
+    type: TType
 }
 
 export type TFunctionCall = {
     position: TPos,
     func: string,
-    args: TRef[]
+    args: TAstNode[]
+    type: TType
 }
 
+export type TAstNode = TRef | TLiteral | TFieldAccess | TFunctionCall
+
+
+
+// DECLARATION TYPES
 export type TVaribleDeclaration = {
     position: TPos,
     name: string,
