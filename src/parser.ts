@@ -13,7 +13,7 @@ import {
 } from './tokens';
 
 const rideParserOpts: IParserConfig = {
-    maxLookahead: 2,
+    maxLookahead: 4,
     recoveryEnabled: true
 };
 

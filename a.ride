@@ -3,6 +3,7 @@
 #    case _ => false
 #}
 
+asdasf.
 func foo(a: Int, b: Int) = true || b
 
 let b64 = base64'AwQAAAABYgMJAA'

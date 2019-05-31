@@ -30,7 +30,7 @@ export const Base58Literal = createToken({
 
 export const Base64Literal = createToken({
     name: "Base64Literal",
-    pattern: /base64'[[A-Za-z0-9+/=]+/
+    pattern: /base64'[[A-Za-z0-9+/=]+'/
 });
 export const BooleanLiteral = createToken({name: 'BooleanLiteral', pattern: Lexer.NA});
 export const True = createToken({name: "True", pattern: /true/, categories: BooleanLiteral});

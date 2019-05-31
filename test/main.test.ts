@@ -17,8 +17,6 @@ describe('basic', () => {
 
 //console.dir(lexingResult, {depth: null})
 
-
-        console.log('Parser built');
         p.input = lexingResult.tokens;
         const cst = p.SCRIPT();
         const v = rideVisitor.visit(cst);
