@@ -4,8 +4,9 @@ import { rideParser } from '../parser';
 import SymbolTable from './SymbolTable';
 import { binaryOperators, unaryOperators } from './operatorFunctions';
 import {
+    TAstNode,
     TError,
-    TFieldAccess,
+    TFieldAccess, TFunctionArgDeclaration,
     TFunctionCall,
     TFunctionDeclaration,
     TLiteral,
@@ -38,10 +39,13 @@ class RideVisitor extends RideVisitorConstructor {
         return this.symbolTableStack[this.symbolTableStack.length - 1];
     }
 
-    private $DEFINE_TYPE(typelessNode: Omit<TFunctionCall, "type"> | Omit<TFieldAccess, "type"> | Omit<TRef, "type">): TType {
-        if ('func' in typelessNode) {
+    private $CHECK_ARGUMENTS(declaredArgs: TFunctionArgDeclaration[], actualArgs: TAstNode[]){
 
-            const decl = this.currentSymbolTable.getDeclarationByName(typelessNode.func) as TFunctionDeclaration | null;
+    }
+
+    private $DEFINE_TYPE(typelessNode: Omit<TFunctionCall, "type"> | Omit<TFieldAccess, "type"> | Omit<TRef, "type"> | TLiteral): TType {
+        if ('func' in typelessNode) {
+            let decl = this.currentSymbolTable.getDeclarationByName(typelessNode.func) as TFunctionDeclaration | null;
             if (decl == null) {
                 const {position} = typelessNode;
                 this.errors.push({
@@ -50,9 +54,9 @@ class RideVisitor extends RideVisitorConstructor {
                 });
                 return 'Unknown';
             } else {
-                return typeof decl === 'function' ?
-                    decl(...typelessNode.args.map(arg => arg.type)).resultType :
-                    decl.resultType;
+                if (typeof decl === 'function') decl =  decl(...typelessNode.args.map(arg => arg.type))
+                this.$CHECK_ARGUMENTS(decl.args, typelessNode.args);
+                return decl.resultType
             }
         }
         else if ('ref' in typelessNode) {
@@ -68,23 +72,26 @@ class RideVisitor extends RideVisitorConstructor {
                 return decl.type;
             }
         }
-        else /*if ('fieldAccess' in typelessNode)*/ {
-            return 'Unknown';
-        }
+        else if ('fieldAccess' in typelessNode) {
+            return 'Define not implemented for FIELD_ACCESS';
+        }else return typelessNode.type
     }
 
-    private $BINARY_OPERATION = (cst: any) => {
+    private $BINARY_OPERATION = (cst: any): TAstNode => {
         const leftResult = this.visit(cst.LHS);
         if (cst.RHS) {
             const rightResult = this.visit(cst.RHS);
             const op = cst.OPERATOR[0];
 
-            const res: TFunctionCall = {
+            const typelessFunctionCall = {
                 position: extractPosition(op),
                 func: op.image,
                 args: [leftResult, rightResult]
             };
-            return res;
+            return {
+                ...typelessFunctionCall,
+                type: this.$DEFINE_TYPE(typelessFunctionCall)
+            };
         } else return leftResult;
     };
 
@@ -108,7 +115,8 @@ class RideVisitor extends RideVisitorConstructor {
         return {
             symbolTable: this.rootSymbolTable,
             expression,
-            publicFunctions
+            publicFunctions,
+            errors: this.errors
         };
     }
 
@@ -134,9 +142,8 @@ class RideVisitor extends RideVisitorConstructor {
             injectedVariables.forEach(variable =>
                 this.currentSymbolTable.addDeclaration(variable));
         }
-
-        const value = this.visit(cst.FUNCTION_BODY);
         const args = this.visitArr(cst.FUNCTION_ARG);
+        const value = this.visit(cst.FUNCTION_BODY);
         const resultType = this.$DEFINE_TYPE(value);
 
         this.symbolTableStack.pop();
@@ -246,7 +253,7 @@ class RideVisitor extends RideVisitorConstructor {
         return result;
     }
 
-    GETTABLE_EXPR(cst: any) {
+    GETTABLE_EXPR(cst: any): TFunctionCall | TFieldAccess {
         if ('FUNCTION_CALL' in cst) {
             cst['FUNCTION_CALL'][0].children.FUNCTION_ARGS.unshift(cst['ITEM'][0]);
             return this.visit(cst.FUNCTION_CALL);
@@ -254,12 +261,16 @@ class RideVisitor extends RideVisitorConstructor {
             const item = this.visit(cst['ITEM']);
             if ('FIELD_ACCESS' in cst) {
                 const accessId = this.visit(cst.FIELD_ACCESS);
-                const res: TFieldAccess = {
+                const typelessNode = {
                     position: extractPosition(accessId),
                     item: item,
                     fieldAccess: this.visit(cst.FIELD_ACCESS),
                 };
-                return res;
+
+                return {
+                    ...typelessNode,
+                    type: this.$DEFINE_TYPE(typelessNode)
+                };
             }
             return item;
         }
@@ -276,11 +287,14 @@ class RideVisitor extends RideVisitorConstructor {
 
     FUNCTION_CALL(cst: any): TFunctionCall {
         const funcId = this.visit(cst.FUNCTION_NAME);
-        const args = this.visitArr(cst.FUNCTION_ARGS);
-        return {
+        const typelessNode = {
             position: extractPosition(funcId),
             func: funcId.image,
-            args
+            args: this.visitArr(cst.FUNCTION_ARGS)
+        };
+        return {
+            ...typelessNode,
+            type: this.$DEFINE_TYPE(typelessNode)
         };
     }
 
@@ -293,13 +307,13 @@ class RideVisitor extends RideVisitorConstructor {
             return {
                 position: extractPosition(cst.Base64Literal[0]),
                 type: 'ByteVector',
-                value: cst.Base64Literal
+                value: 'not implemented'//cst.Base64Literal
             };
         } else if ('Base58Literal' in cst) {
             return {
                 position: extractPosition(cst.Base58Literal[0]),
                 type: 'ByteVector',
-                value: cst.Base58Literal
+                value: 'not implemented'//cst.Base58Literal
             };
         } else if ('IntegerLiteral' in cst) {
             return {
