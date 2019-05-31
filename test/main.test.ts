@@ -21,7 +21,7 @@ describe('basic', () => {
         const cst = p.SCRIPT();
         const v = rideVisitor.visit(cst);
         const st = rideVisitor.rootSymbolTable;
-
+        console.log(p.errors)
         console.log(v);
         // console.log(123)
 // console.dir(cst.children.DECL[0], {depth: 8})

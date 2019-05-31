@@ -2,8 +2,7 @@
 #    case c1: TransferTransaction => true
 #    case _ => false
 #}
-
-asdasf.
+.asd
 func foo(a: Int, b: Int) = true || b
 
 let b64 = base64'AwQAAAABYgMJAA'

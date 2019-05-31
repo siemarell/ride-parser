@@ -54,7 +54,8 @@ class RideVisitor extends RideVisitorConstructor {
                 });
                 return 'Unknown';
             } else {
-                if (typeof decl === 'function') decl =  decl(...typelessNode.args.map(arg => arg.type))
+                if (typeof decl === 'function')
+                    decl =  decl(...typelessNode.args.map(arg => arg && arg.type))
                 this.$CHECK_ARGUMENTS(decl.args, typelessNode.args);
                 return decl.resultType
             }
@@ -106,16 +107,24 @@ class RideVisitor extends RideVisitorConstructor {
         return (nodes || []).map((node: any) => super.visit(node, opts));
     }
 
-    SCRIPT(cst: any) {
-        //cst.DECL.forEach((dec:any) => this.visit(dec))
+    DAPP(cst: any) {
         this.visitArr(cst.DECL);
         const publicFunctions = this.visitArr(cst.ANNOTATEDFUNC);
+
+        return {
+            symbolTable: this.rootSymbolTable,
+            publicFunctions,
+            errors: this.errors
+        };
+    }
+
+    SCRIPT(cst: any) {
+        this.visitArr(cst.DECL);
         const expression = this.visit(cst.EXPR);
 
         return {
             symbolTable: this.rootSymbolTable,
             expression,
-            publicFunctions,
             errors: this.errors
         };
     }
