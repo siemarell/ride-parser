@@ -1,10 +1,12 @@
-import {TType} from '@waves/ride-js'
+import { TType, TUnionItem } from '@waves/ride-js';
 
 
-const Union = (...types: TType[]) => {
+export const Union = (...types: TType[]): TType => {
     if (types.length === 0) return 'Unit';
     else if (types.length === 1) return types[0];
-    return types;
+
+    //FixMe: flatten unions
+    return types as any;
 };
 
 

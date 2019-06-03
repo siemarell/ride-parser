@@ -49,8 +49,21 @@ export type TFunctionCall = {
     type: TType
 }
 
-export type TAstNode = TRef | TLiteral | TFieldAccess | TFunctionCall
+export type TMatch = {
+    position: TPos,
+    match: Exclude<TAstNode, TLiteral>,
+    cases: TMatchCase[],
+    type: TType
+}
 
+export type TMatchCase = {
+    position: TPos,
+    name: string,
+    matchType: string | null
+    type: TType
+    value: any
+}
+export type TAstNode = TRef | TLiteral | TFieldAccess | TFunctionCall | TMatch
 
 
 // DECLARATION TYPES

@@ -2,14 +2,14 @@ import { TFunctionArgument, TType } from '@waves/ride-js';
 
 import { rideParser } from '../parser';
 import SymbolTable from './SymbolTable';
-import { binaryOperators, unaryOperators } from './operatorFunctions';
+import { binaryOperators, unaryOperators, Union } from './operatorFunctions';
 import {
     TAstNode,
     TError,
     TFieldAccess, TFunctionArgDeclaration,
     TFunctionCall,
     TFunctionDeclaration,
-    TLiteral,
+    TLiteral, TMatch, TMatchCase,
     TRef,
     TVaribleDeclaration
 } from './types';
@@ -39,11 +39,18 @@ class RideVisitor extends RideVisitorConstructor {
         return this.symbolTableStack[this.symbolTableStack.length - 1];
     }
 
-    private $CHECK_ARGUMENTS(declaredArgs: TFunctionArgDeclaration[], actualArgs: TAstNode[]){
+    private $CHECK_ARGUMENTS(declaredArgs: TFunctionArgDeclaration[], actualArgs: TAstNode[]) {
 
     }
 
-    private $DEFINE_TYPE(typelessNode: Omit<TFunctionCall, "type"> | Omit<TFieldAccess, "type"> | Omit<TRef, "type"> | TLiteral): TType {
+    private $DEFINE_TYPE(typelessNode:
+                             Omit<TFunctionCall, "type"> |
+                             Omit<TFieldAccess, "type"> |
+                             Omit<TRef, "type"> |
+                             Omit<TMatch, "type"> |
+                             Omit<TMatchCase, "type"> |
+                             TLiteral
+    ): TType {
         if ('func' in typelessNode) {
             let decl = this.currentSymbolTable.getDeclarationByName(typelessNode.func) as TFunctionDeclaration | null;
             if (decl == null) {
@@ -55,9 +62,9 @@ class RideVisitor extends RideVisitorConstructor {
                 return 'Unknown';
             } else {
                 if (typeof decl === 'function')
-                    decl =  decl(...typelessNode.args.map(arg => arg && arg.type))
+                    decl = decl(...typelessNode.args.map(arg => arg && arg.type));
                 this.$CHECK_ARGUMENTS(decl.args, typelessNode.args);
-                return decl.resultType
+                return decl.resultType;
             }
         }
         else if ('ref' in typelessNode) {
@@ -74,8 +81,12 @@ class RideVisitor extends RideVisitorConstructor {
             }
         }
         else if ('fieldAccess' in typelessNode) {
-            return 'Define not implemented for FIELD_ACCESS';
-        }else return typelessNode.type
+            return 'DefineType not implemented for FIELD_ACCESS';
+        } else if ('match' in typelessNode) {
+            return 'DefineType not implemented for MATCH';
+        } else if ('matchType' in typelessNode) {
+            return 'DefineType not implemented for MATCH_CASE';
+        } else return typelessNode.type;
     }
 
     private $BINARY_OPERATION = (cst: any): TAstNode => {
@@ -286,9 +297,22 @@ class RideVisitor extends RideVisitorConstructor {
     }
 
     IF(cst: any) {
+
     }
 
-    MATCH(cst: any) {
+    MATCH(cst: any): TMatch {
+        const match: Exclude<TAstNode, TLiteral> = this.visit(cst.MATCH_EXPR);
+        // Todo: Check match type to be union
+        const cases: TMatchCase[] = this.visitArr(cst.MATCH_CASE);
+
+        //Todo: cases types to cover all match types
+        const type = Union(...cases.map(x => x.type));
+        return {
+            position: extractPosition(cst.Match),
+            match,
+            cases,
+            type
+        };
     }
 
     MATCH_CASE(cst: any) {

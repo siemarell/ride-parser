@@ -1,12 +1,14 @@
-#let h =  match (tx) {
-#    case c1: TransferTransaction => true
-#    case _ => false
-#}
-.asd
+let h = match (tx) {
+    case c1: TransferTransaction => true
+    case _ => false
+}
+
 func foo(a: Int, b: Int) = true || b
 
 let b64 = base64'AwQAAAABYgMJAA'
 
 let u = b64.foo(bar, 2)
+
+
 (1 - 2) * 3
 
