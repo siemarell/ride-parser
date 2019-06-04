@@ -1,4 +1,4 @@
-import { TFunctionArgument, TType } from '@waves/ride-js';
+import { getFunctionsDoc, getVarsDoc, scriptInfo, TFunctionArgument, TType } from '@waves/ride-js';
 
 import { rideParser } from '../parser';
 import SymbolTable from './SymbolTable';
@@ -34,6 +34,15 @@ export class RideVisitor extends RideVisitorConstructor {
     symbolTableStack = [this.rootSymbolTable];
 
     errors: TError[] = [];
+
+    constructor(info: ReturnType<typeof scriptInfo>) {
+        super();
+        const fDocs = getFunctionsDoc(info.stdLibVersion, info.scriptType === 2);
+        const vDocs = getVarsDoc(info.stdLibVersion, info.scriptType === 2);
+        // This helper will detect any missing or redundant methods on this visitor
+
+        this.validateVisitor();
+    }
 
     get currentSymbolTable() {
         return this.symbolTableStack[this.symbolTableStack.length - 1];
@@ -102,13 +111,6 @@ export class RideVisitor extends RideVisitorConstructor {
             };
         } else return leftResult;
     };
-
-    constructor() {
-        super();
-        // This helper will detect any missing or redundant methods on this visitor
-        this.validateVisitor();
-    }
-
 
     visitArr(nodes: CstNode[], opts?: any) {
         return (nodes || []).map((node: any) => super.visit(node, opts));
