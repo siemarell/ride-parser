@@ -5,7 +5,7 @@ export const Union = (...types: TType[]): TType => {
     if (types.length === 0) return 'Unit';
     else if (types.length === 1) return types[0];
 
-    //FixMe: flatten unions
+    //FixMe: flatten unions, remove duplicate unions
     return types as any;
 };
 

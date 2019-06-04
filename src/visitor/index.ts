@@ -47,7 +47,7 @@ class RideVisitor extends RideVisitorConstructor {
                              Omit<TFunctionCall, "type"> |
                              Omit<TFieldAccess, "type"> |
                              Omit<TRef, "type"> |
-                             Omit<TMatch, "type"> |
+                             TMatch|
                              TLiteral
     ): TType {
         if ('func' in typelessNode) {
@@ -81,8 +81,6 @@ class RideVisitor extends RideVisitorConstructor {
         }
         else if ('fieldAccess' in typelessNode) {
             return 'DefineType not implemented for FIELD_ACCESS';
-        } else if ('match' in typelessNode) {
-            return 'DefineType not implemented for MATCH';
         } else return typelessNode.type;
     }
 
