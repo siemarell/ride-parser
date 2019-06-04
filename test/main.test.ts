@@ -2,7 +2,7 @@ import { createToken, Lexer, } from 'chevrotain';
 import * as fs from 'fs';
 import { rideParser as p } from '../src/parser';
 import { allTokens } from '../src/tokens';
-import { rideVisitor } from '../src/visitor';
+import { RideVisitor } from '../src/visitor';
 
 describe('basic', () => {
 
@@ -19,6 +19,7 @@ describe('basic', () => {
 
         p.input = lexingResult.tokens;
         const cst = p.SCRIPT();
+        const rideVisitor = new RideVisitor();
         const v = rideVisitor.visit(cst);
         const st = rideVisitor.rootSymbolTable;
         console.log(p.errors)
