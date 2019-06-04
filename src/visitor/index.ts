@@ -1,8 +1,8 @@
-import { getFunctionsDoc, getVarsDoc, scriptInfo, TFunctionArgument, TType } from '@waves/ride-js';
+import { getFunctionsDoc, getVarsDoc, scriptInfo, TFunctionArgument } from '@waves/ride-js';
 
 import { rideParser } from '../parser';
-import SymbolTable from './SymbolTable';
-import { binaryOperators, unaryOperators, Union } from './operatorFunctions';
+import { SymbolTable } from './SymbolTable';
+import { TypeSymbolTable, TTypeRef } from './TypeSymbolTable';
 import {
     TAstNode,
     TError,
@@ -59,7 +59,7 @@ export class RideVisitor extends RideVisitorConstructor {
                              | TIfElse
                              | TMatch
                              | TLiteral
-    ): TType {
+    ): TTypeRef {
         if ('func' in typelessNode) {
             let decl = this.currentSymbolTable.getDeclarationByName(typelessNode.func) as TFunctionDeclaration | null;
             if (decl == null) {
@@ -202,13 +202,12 @@ export class RideVisitor extends RideVisitorConstructor {
         return this.FUNC(cst.FUNC[0], [injectVar]);
     }
 
-    FUNCTION_ARG(cst: any): TFunctionArgument {
+    FUNCTION_ARG(cst: any): TFunctionArgDeclaration {
         const identifier = this.visit(cst.ARG_NAME);
         const typeIdentifier = this.visit(cst.ARG_TYPE);
 
         const result = {
             //position: identifier,
-            doc: '',
             name: identifier.image,
             type: typeIdentifier.image,
             // value: null
@@ -238,7 +237,7 @@ export class RideVisitor extends RideVisitorConstructor {
         this.visitArr(cst.BLOCK_DECLARATIONS);
         const result = this.visit(cst.BLOCK_VALUE);
         this.symbolTableStack.pop();
-        return result
+        return result;
     }
 
     OR_OP = this.$BINARY_OPERATION;
@@ -301,7 +300,7 @@ export class RideVisitor extends RideVisitorConstructor {
         //todo: check condition returns boolean type
         const thenValue: TAstNode = this.visit(cst.THEN_EXPR);
         const elseValue: TAstNode = this.visit(cst.ELSE_EXPR);
-        const type = Union(thenValue.type, elseValue.type);
+        const type = TypeSymbolTable.union(thenValue.type, elseValue.type);
 
         return {
             position: extractPosition(cst.If[0]),
@@ -309,7 +308,7 @@ export class RideVisitor extends RideVisitorConstructor {
             thenValue,
             elseValue,
             type
-        }
+        };
     }
 
     MATCH(cst: any): TMatch {
@@ -318,7 +317,7 @@ export class RideVisitor extends RideVisitorConstructor {
         const cases: TMatchCase[] = this.visitArr(cst.MATCH_CASE);
 
         //Todo: Check cases types to cover all match types
-        const type = Union(...cases.map(x => x.caseValue.type));
+        const type = TypeSymbolTable.union(...cases.map(x => x.caseValue.type));
         return {
             position: extractPosition(cst.Match[0]),
             match,
@@ -331,19 +330,19 @@ export class RideVisitor extends RideVisitorConstructor {
         this.symbolTableStack.push(new SymbolTable(this.currentSymbolTable));
 
         let caseVar, caseType;
-        if (cst.Underscore == null){
+        if (cst.Underscore == null) {
             caseType = this.visit(cst.CASE_TYPE);
             // Todo: check matchType to present in type symbol table
-            caseVar =  this.visit(cst.CASE_VAR);
+            caseVar = this.visit(cst.CASE_VAR);
             this.currentSymbolTable.addDeclaration({
                 position: extractPosition(caseVar),
                 type: caseType.image,
                 name: caseVar.image,
                 value: null
-            })
-        }else {
-            caseType = null
-            caseVar = cst.Underscore[0]
+            });
+        } else {
+            caseType = null;
+            caseVar = cst.Underscore[0];
         }
 
         const caseValue: TAstNode = this.visit(cst.CASE_BODY);
@@ -355,7 +354,7 @@ export class RideVisitor extends RideVisitorConstructor {
             caseName: caseVar.image,
             caseType,
             caseValue
-        }
+        };
     }
 
     FUNCTION_CALL(cst: any): TFunctionCall {
@@ -436,5 +435,12 @@ export class RideVisitor extends RideVisitorConstructor {
             ...typelessNode,
             type: this.$DEFINE_TYPE(typelessNode)
         };
+    }
+
+    TYPE_REFERENCE(cst:any){
+        return {
+            position: extractPosition(cst.Identifier[0]),
+            ref: cst.Identifier[0].image,
+        }
     }
 }

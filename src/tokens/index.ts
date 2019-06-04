@@ -22,7 +22,7 @@ export const Brackets = [
 
 // LITERALS
 export const IntegerLiteral = createToken({name: "IntegerLiteral", pattern: /0|[1-9]\d*/});
-export const StringLiteral = createToken({name: "StringLiteral", pattern: /"[a-zA-Z0-9]*"/});
+export const StringLiteral = createToken({name: "StringLiteral", pattern: /"(\\.|[^"\\])*"/});
 export const Base58Literal = createToken({
     name: "Base58Literal",
     pattern: /base58'[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+'/

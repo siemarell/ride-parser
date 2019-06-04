@@ -1,5 +1,6 @@
-import {TType, TPrimitive, TUnion, TStruct, TFunction, TFunctionArgument} from '@waves/ride-js'
+import { TTypeRef } from './TypeSymbolTable';
 
+// Metadata types
 export type TError = {
     position: TPos,
     message: string
@@ -13,47 +14,38 @@ export type TPos = {
     endColumn: number,
 }
 
-type TRange = {
-    start: TPos
-    end: TPos
-}
-
-// export interface INode {
-//     range: TRange
-// }
-
 // AST Types
 export type TRef = {
     position: TPos
     ref: string
-    type: TType
+    type: TTypeRef
 }
 
 export type TLiteral = {
     position: TPos,
     value: any
-    type: TType,
+    type: TTypeRef,
 }
 
 export type TFieldAccess = {
     position: TPos
     item: TRef | TFunctionCall
     fieldAccess: string
-    type: TType
+    type: TTypeRef
 }
 
 export type TFunctionCall = {
     position: TPos,
     func: string,
     args: TAstNode[]
-    type: TType
+    type: TTypeRef
 }
 
 export type TMatch = {
     position: TPos,
     match: Exclude<TAstNode, TLiteral>,
     cases: TMatchCase[],
-    type: TType
+    type: TTypeRef
 }
 
 export type TMatchCase = {
@@ -68,7 +60,7 @@ export type TIfElse = {
     condition: TAstNode,
     thenValue: TAstNode,
     elseValue: TAstNode
-    type: TType
+    type: TTypeRef
 }
 
 export type TAstNode = TRef | TLiteral | TFieldAccess | TFunctionCall | TMatch | TIfElse
@@ -78,28 +70,18 @@ export type TAstNode = TRef | TLiteral | TFieldAccess | TFunctionCall | TMatch |
 export type TVaribleDeclaration = {
     position: TPos,
     name: string,
-    type: TType,
+    type: TTypeRef,
     value: any,
 }
 
-export type TFunctionArgDeclaration = {name: string, type: TType}
+export type TFunctionArgDeclaration = {name: string, type: TTypeRef}
 export type TFunctionDeclarationBasic = {
     position: TPos
     name: string
     args: TFunctionArgDeclaration[]
-    resultType: TType
+    resultType: TTypeRef
     value: any
 }
-export type TFunctionDeclarationGeneric = (...args: TType[]) => TFunctionDeclarationBasic
+export type TFunctionDeclarationGeneric = (...args: TTypeRef[]) => TFunctionDeclarationBasic
 export type TFunctionDeclaration = TFunctionDeclarationBasic | TFunctionDeclarationGeneric
 export type TDeclaration = TVaribleDeclaration | TFunctionDeclaration
-//
-// export interface IFunctionDeclaration extends IDeclaration {
-//     type:  TFunction
-// }
-//
-// export interface IVariableDeclaration extends IDeclaration{
-//     type: TType
-// }
-//
-// export type TDeclaration = IFunctionDeclaration | IVariableDeclaration

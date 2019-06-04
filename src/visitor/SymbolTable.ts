@@ -4,7 +4,7 @@ import { binaryOperators, unaryOperators } from './operatorFunctions';
 
 const globalSymbols: Record<string, TDeclaration> = { ...binaryOperators, ...unaryOperators};
 
-export default class SymbolTable {
+export class SymbolTable {
     children: SymbolTable[] = [];
     values: Record<string, TDeclaration> = {};
 

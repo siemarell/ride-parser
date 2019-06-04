@@ -1,29 +1,18 @@
-import { TType, TUnionItem } from '@waves/ride-js';
+import { TypeSymbolTable, TTypeRef} from './TypeSymbolTable';
 
-
-export const Union = (...types: TType[]): TType => {
-    if (types.length === 0) return 'Unit';
-    else if (types.length === 1) return types[0];
-
-    //FixMe: flatten unions, remove duplicate unions
-    return types as any;
-};
-
-
-
-const FUNC_AND = (...types: TType[]) => ({
+const FUNC_AND = (...types: TTypeRef[]) => ({
     name: `FUNC_AND[${types[1]}]`,
     args: ['Boolean', types[1]],
-    resultType: Union('Boolean', types[1])
+    resultType:TypeSymbolTable.union('Boolean', types[1])
 });
 
-const FUNC_OR = (...types: TType[]) => ({
+const FUNC_OR = (...types: TTypeRef[]) => ({
     name: `FUNC_OR[${types[1]}]`,
     args: ['Boolean', types[1]],
-    resultType: Union('Boolean', types[1])
+    resultType:TypeSymbolTable.union('Boolean', types[1])
 });
 
-const FUNC_EQ = (...types: TType[]) => ({
+const FUNC_EQ = (...types: TTypeRef[]) => ({
     name: `FUNC_EQ[${types[0]}]`,
     args: [types[0], types[0]],
     resultType: 'Boolean'
@@ -95,7 +84,7 @@ const FUNC_MOD = ({
 export const binaryOperators: Record<string, any> = {
     '&&': FUNC_AND,
     '||': FUNC_OR,
-    '=': FUNC_EQ,
+    '==': FUNC_EQ,
     '>': FUNC_GT,
     '<': FUNC_LT,
     '>=': FUNC_GTE,

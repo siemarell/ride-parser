@@ -73,7 +73,7 @@ class RideParser extends Parser {
     public FUNCTION_ARG = this.RULE("FUNCTION_ARG", () => {
         this.SUBRULE(this.IDENTIFIER, {LABEL: 'ARG_NAME'});
         this.CONSUME(Colon);
-        this.SUBRULE1(this.IDENTIFIER, {LABEL: 'ARG_TYPE'});
+        this.SUBRULE1(this.TYPE_REFERENCE, {LABEL: 'ARG_TYPE'});
     });
 
     public LET = this.RULE("LET", () => {
@@ -205,7 +205,7 @@ class RideParser extends Parser {
                 ALT: () => {
                     this.SUBRULE(this.IDENTIFIER, {LABEL: 'CASE_VAR'});
                     this.CONSUME(Colon);
-                    this.SUBRULE1(this.IDENTIFIER, {LABEL: 'CASE_TYPE'});
+                    this.SUBRULE1(this.TYPE_REFERENCE, {LABEL: 'CASE_TYPE'});
                 }
             },
             {ALT: () => this.CONSUME(Underscore)}
@@ -259,6 +259,10 @@ class RideParser extends Parser {
     });
 
     public REFERENCE = this.RULE("REFERENCE", () => {
+        this.CONSUME(Identifier);
+    });
+
+    public TYPE_REFERENCE = this.RULE("TYPE_REFERENCE", () => {
         this.CONSUME(Identifier);
     });
 }
