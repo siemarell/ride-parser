@@ -10,5 +10,8 @@ let b64 = base64'AwQAAAABYgMJAA'
 let u = b64.foo(bar, 2)
 
 
-(1 - 2) * 3
+if (2 > 10) then true else {
+    let a = 10
+    a > 10
+}
 

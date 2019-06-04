@@ -8,7 +8,7 @@ import {
     TError,
     TFieldAccess, TFunctionArgDeclaration,
     TFunctionCall,
-    TFunctionDeclaration,
+    TFunctionDeclaration, TIfElse,
     TLiteral, TMatch, TMatchCase,
     TRef,
     TVaribleDeclaration
@@ -44,11 +44,12 @@ class RideVisitor extends RideVisitorConstructor {
     }
 
     private $DEFINE_TYPE(typelessNode:
-                             Omit<TFunctionCall, "type"> |
-                             Omit<TFieldAccess, "type"> |
-                             Omit<TRef, "type"> |
-                             TMatch|
-                             TLiteral
+                             | Omit<TFunctionCall, "type">
+                             | Omit<TFieldAccess, "type">
+                             | Omit<TRef, "type">
+                             | TIfElse
+                             | TMatch
+                             | TLiteral
     ): TType {
         if ('func' in typelessNode) {
             let decl = this.currentSymbolTable.getDeclarationByName(typelessNode.func) as TFunctionDeclaration | null;
@@ -128,6 +129,7 @@ class RideVisitor extends RideVisitorConstructor {
         this.visitArr(cst.DECL);
         const expression = this.visit(cst.EXPR);
 
+        // todo: check expression returns boolean
         return {
             symbolTable: this.rootSymbolTable,
             expression,
@@ -232,8 +234,9 @@ class RideVisitor extends RideVisitorConstructor {
     BLOCK(cst: any) {
         this.symbolTableStack.push(new SymbolTable(this.currentSymbolTable));
         this.visitArr(cst.BLOCK_DECLARATIONS);
+        const result = this.visit(cst.BLOCK_VALUE);
         this.symbolTableStack.pop();
-        return this.visit(cst.BLOCK_VALUE);
+        return result
     }
 
     OR_OP = this.$BINARY_OPERATION;
@@ -292,7 +295,19 @@ class RideVisitor extends RideVisitorConstructor {
     }
 
     IF(cst: any) {
+        const condition: TAstNode = this.visit(cst.CONDITION_EXPR);
+        //todo: check condition returns boolean type
+        const thenValue: TAstNode = this.visit(cst.THEN_EXPR);
+        const elseValue: TAstNode = this.visit(cst.ELSE_EXPR);
+        const type = Union(thenValue.type, elseValue.type);
 
+        return {
+            position: extractPosition(cst.If[0]),
+            condition,
+            thenValue,
+            elseValue,
+            type
+        }
     }
 
     MATCH(cst: any): TMatch {

@@ -62,7 +62,16 @@ export type TMatchCase = {
     caseType: string | null
     caseValue: TAstNode
 }
-export type TAstNode = TRef | TLiteral | TFieldAccess | TFunctionCall | TMatch
+
+export type TIfElse = {
+    position: TPos,
+    condition: TAstNode,
+    thenValue: TAstNode,
+    elseValue: TAstNode
+    type: TType
+}
+
+export type TAstNode = TRef | TLiteral | TFieldAccess | TFunctionCall | TMatch | TIfElse
 
 
 // DECLARATION TYPES
