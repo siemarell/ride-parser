@@ -58,10 +58,9 @@ export type TMatch = {
 
 export type TMatchCase = {
     position: TPos,
-    name: string,
-    matchType: string | null
-    type: TType
-    value: any
+    caseName: string,
+    caseType: string | null
+    caseValue: TAstNode
 }
 export type TAstNode = TRef | TLiteral | TFieldAccess | TFunctionCall | TMatch
 

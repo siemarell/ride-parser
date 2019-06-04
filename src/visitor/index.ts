@@ -48,7 +48,6 @@ class RideVisitor extends RideVisitorConstructor {
                              Omit<TFieldAccess, "type"> |
                              Omit<TRef, "type"> |
                              Omit<TMatch, "type"> |
-                             Omit<TMatchCase, "type"> |
                              TLiteral
     ): TType {
         if ('func' in typelessNode) {
@@ -84,8 +83,6 @@ class RideVisitor extends RideVisitorConstructor {
             return 'DefineType not implemented for FIELD_ACCESS';
         } else if ('match' in typelessNode) {
             return 'DefineType not implemented for MATCH';
-        } else if ('matchType' in typelessNode) {
-            return 'DefineType not implemented for MATCH_CASE';
         } else return typelessNode.type;
     }
 
@@ -305,17 +302,45 @@ class RideVisitor extends RideVisitorConstructor {
         // Todo: Check match type to be union
         const cases: TMatchCase[] = this.visitArr(cst.MATCH_CASE);
 
-        //Todo: cases types to cover all match types
-        const type = Union(...cases.map(x => x.type));
+        //Todo: Check cases types to cover all match types
+        const type = Union(...cases.map(x => x.caseValue.type));
         return {
-            position: extractPosition(cst.Match),
+            position: extractPosition(cst.Match[0]),
             match,
             cases,
             type
         };
     }
 
-    MATCH_CASE(cst: any) {
+    MATCH_CASE(cst: any): TMatchCase {
+        this.symbolTableStack.push(new SymbolTable(this.currentSymbolTable));
+
+        let caseVar, caseType;
+        if (cst.Underscore == null){
+            caseType = this.visit(cst.CASE_TYPE);
+            // Todo: check matchType to present in type symbol table
+            caseVar =  this.visit(cst.CASE_VAR);
+            this.currentSymbolTable.addDeclaration({
+                position: extractPosition(caseVar),
+                type: caseType.image,
+                name: caseVar.image,
+                value: null
+            })
+        }else {
+            caseType = null
+            caseVar = cst.Underscore[0]
+        }
+
+        const caseValue: TAstNode = this.visit(cst.CASE_BODY);
+
+        this.symbolTableStack.pop();
+
+        return {
+            position: extractPosition(caseVar),
+            caseName: caseVar.image,
+            caseType,
+            caseValue
+        }
     }
 
     FUNCTION_CALL(cst: any): TFunctionCall {

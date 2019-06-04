@@ -211,7 +211,7 @@ class RideParser extends Parser {
             {ALT: () => this.CONSUME(Underscore)}
         ]);
         this.CONSUME(Arrow);
-        this.SUBRULE(this.EXPR);
+        this.SUBRULE(this.EXPR, {LABEL: 'CASE_BODY'});
     });
 
     public FUNCTION_CALL = this.RULE("FUNCTION_CALL", () => {
