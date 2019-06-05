@@ -1,4 +1,4 @@
-import { TTypeRef } from './TypeSymbolTable';
+import { TTypeRef } from './TypeTable';
 
 // Metadata types
 export type TError = {

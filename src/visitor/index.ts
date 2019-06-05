@@ -1,8 +1,8 @@
-import { getFunctionsDoc, getVarsDoc, scriptInfo, TFunctionArgument } from '@waves/ride-js';
+import { getFunctionsDoc, getVarsDoc, scriptInfo, getTypes, TFunctionArgument, TFunction } from '@waves/ride-js';
 
 import { rideParser } from '../parser';
 import { SymbolTable } from './SymbolTable';
-import { TypeSymbolTable, TTypeRef } from './TypeSymbolTable';
+import { TypeTable, TTypeRef } from './TypeTable';
 import {
     TAstNode,
     TError,
@@ -33,14 +33,22 @@ export class RideVisitor extends RideVisitorConstructor {
 
     symbolTableStack = [this.rootSymbolTable];
 
+    typeTable: TypeTable;
+
     errors: TError[] = [];
 
     constructor(info: ReturnType<typeof scriptInfo>) {
         super();
         const fDocs = getFunctionsDoc(info.stdLibVersion, info.scriptType === 2);
         const vDocs = getVarsDoc(info.stdLibVersion, info.scriptType === 2);
-        // This helper will detect any missing or redundant methods on this visitor
+        const tDocs = getTypes(info.stdLibVersion, info.scriptType === 2);
+        fDocs.forEach(fDoc => {
+            this.rootSymbolTable.addDeclaration(fDoc as any)
+        })
+        this.typeTable = new TypeTable(tDocs);
 
+        console.log(this.typeTable)
+        // This helper will detect any missing or redundant methods on this visitor
         this.validateVisitor();
     }
 
@@ -300,7 +308,7 @@ export class RideVisitor extends RideVisitorConstructor {
         //todo: check condition returns boolean type
         const thenValue: TAstNode = this.visit(cst.THEN_EXPR);
         const elseValue: TAstNode = this.visit(cst.ELSE_EXPR);
-        const type = TypeSymbolTable.union(thenValue.type, elseValue.type);
+        const type = TypeTable.union(thenValue.type, elseValue.type);
 
         return {
             position: extractPosition(cst.If[0]),
@@ -317,7 +325,7 @@ export class RideVisitor extends RideVisitorConstructor {
         const cases: TMatchCase[] = this.visitArr(cst.MATCH_CASE);
 
         //Todo: Check cases types to cover all match types
-        const type = TypeSymbolTable.union(...cases.map(x => x.caseValue.type));
+        const type = TypeTable.union(...cases.map(x => x.caseValue.type));
         return {
             position: extractPosition(cst.Match[0]),
             match,
@@ -438,6 +446,7 @@ export class RideVisitor extends RideVisitorConstructor {
     }
 
     TYPE_REFERENCE(cst:any){
+        // Todo: check type in TypeTable
         return {
             position: extractPosition(cst.Identifier[0]),
             ref: cst.Identifier[0].image,

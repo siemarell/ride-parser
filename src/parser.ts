@@ -230,13 +230,6 @@ class RideParser extends Parser {
             SEP: Comma,
             DEF: (this.SUBRULE(this.EXPR, {LABEL: 'LIST_ITEMS'}))
         });
-        // this.OPTION(() => {
-        //     this.SUBRULE(this.EXPR);
-        //     this.MANY(() => {
-        //         this.CONSUME(Comma);
-        //         this.SUBRULE1(this.EXPR);
-        //     });
-        // });
         this.CONSUME(RSquare);
     });
 

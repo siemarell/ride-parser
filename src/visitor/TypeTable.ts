@@ -1,10 +1,13 @@
-import { TPrimitive, TType, getVarsDoc, getFunctionsDoc } from '@waves/ride-js';
+import { TType, TStructField } from '@waves/ride-js';
 
 export type TTypeRef = string | string[]
 
-export class TypeSymbolTable {
+export class TypeTable {
     private _values: Record<string, TType> = {};
 
+    constructor(tdocs: TStructField[]){
+        tdocs.forEach(({name, type}) => this.addDefinition(name, type))
+    }
     addDefinition(name: string, value: TType) {
         this._values[name] = value;
     }

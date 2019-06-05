@@ -1,15 +1,15 @@
-import { TypeSymbolTable, TTypeRef} from './TypeSymbolTable';
+import { TypeTable, TTypeRef} from './TypeTable';
 
 const FUNC_AND = (...types: TTypeRef[]) => ({
     name: `FUNC_AND[${types[1]}]`,
     args: ['Boolean', types[1]],
-    resultType:TypeSymbolTable.union('Boolean', types[1])
+    resultType:TypeTable.union('Boolean', types[1])
 });
 
 const FUNC_OR = (...types: TTypeRef[]) => ({
     name: `FUNC_OR[${types[1]}]`,
     args: ['Boolean', types[1]],
-    resultType:TypeSymbolTable.union('Boolean', types[1])
+    resultType:TypeTable.union('Boolean', types[1])
 });
 
 const FUNC_EQ = (...types: TTypeRef[]) => ({
