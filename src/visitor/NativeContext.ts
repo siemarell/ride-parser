@@ -1,11 +1,12 @@
-import { getFunctionsDoc, getVarsDoc, ISriptInfo, TType } from '@waves/ride-js';
+import { getFunctionsDoc, getVarsDoc, ISriptInfo, TFunction, TType } from '@waves/ride-js';
 import { TDeclaration } from './types';
 import { binaryOperators, unaryOperators } from './operatorFunctions';
 
 const globalSymbols: Record<string, TDeclaration> = {...binaryOperators, ...unaryOperators};
 
 export class NativeContext {
-    values: Record<string, any>;
+    variables: Record<string, TNativeVar>;
+    functions: Record<string, TFunction>;
 
     private static _instances: Record<string, NativeContext> = {};
 
@@ -23,15 +24,24 @@ export class NativeContext {
             acc[item.name] = item;
             return acc;
         }, {} as any);
-        this.values = {...fDocs, ...vDocs, ...globalSymbols};
+        this.variables = vDocs;
+        this.functions = {...fDocs, ...globalSymbols};
     }
 
     static for(info: ISriptInfo): NativeContext {
         const key = `${info.contentType}-${info.scriptType}-${info.stdLibVersion}`;
         if (!this._instances[key]) {
-            this._instances[key] = new NativeContext(info)
+            this._instances[key] = new NativeContext(info);
         }
         return this._instances[key];
+    }
+
+    varByName(name: string): TNativeVar | null {
+        return this.variables[name] || null
+    }
+
+    funcByName(name: string): TFunction | null {
+        return this.functions[name] || null
     }
 }
 
@@ -40,18 +50,3 @@ export type TNativeVar = {
     doc: string,
     type: TType
 }
-
-export type TFunctionArgument = {
-    name: string
-    type: TType
-    doc: string
-};
-
-export type TNativeFunc = {
-    name: string
-    doc: string
-    resultType: TType
-    args: TFunctionArgument[]
-};
-
-export type TNativeItem = TNativeVar | TNativeFunc

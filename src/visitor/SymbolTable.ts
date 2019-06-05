@@ -1,29 +1,40 @@
-import { TDeclaration } from './types';
+import { TDeclaration, TFunctionDeclaration, TVaribleDeclaration } from './types';
 
 export class SymbolTable {
     children: SymbolTable[] = [];
-    values: Record<string, TDeclaration> = {};
+    variables: Record<string, TVaribleDeclaration> = {};
+    functions: Record<string, TFunctionDeclaration> = {};
 
     constructor(public parent?: SymbolTable) {
         if (parent != null) {
             parent.children.push(this);
         }
     }
-    addDeclaration(decl: TDeclaration, overload = false) {
-        if (this.values[decl.name] != null && !overload) {
+    addVariable(decl: TVaribleDeclaration) {
+        if (this.variables[decl.name] != null ) {
             throw new Error("Duplicate Identifier");
         } else {
-            this.values[decl.name] = decl;
+            this.variables[decl.name] = decl;
         }
     }
 
-    getDeclarationByName(name: string): TDeclaration | null {
-        return this.values[name] ||
-            (this.parent && this.parent.getDeclarationByName(name));
+    addFunction(decl: TFunctionDeclaration) {
+        if (this.functions[decl.name] != null ) {
+            throw new Error("Duplicate Identifier");
+        } else {
+            this.functions[decl.name] = decl;
+        }
     }
 
-    _getDeclByName(name: string) {
-        return this.values[name] || (this.parent && this.parent.getDeclarationByName(name));
+    varByName(name: string): TVaribleDeclaration | null {
+        return this.variables[name] ||
+            (this.parent && this.parent.varByName(name));
     }
+
+    funcByName(name: string): TFunctionDeclaration | null {
+        return this.functions[name] ||
+            (this.parent && this.parent.funcByName(name));
+    }
+
 }
 

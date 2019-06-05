@@ -22,7 +22,7 @@ import {
     TVaribleDeclaration
 } from './types';
 import { CstNode } from 'chevrotain';
-import { NativeContext, TNativeFunc, TNativeItem } from './NativeContext';
+import { NativeContext } from './NativeContext';
 
 const RideVisitorConstructor = rideParser.getBaseCstVisitorConstructor();
 
@@ -62,14 +62,7 @@ export class RideVisitor extends RideVisitorConstructor {
         return this.symbolTableStack[this.symbolTableStack.length - 1];
     }
 
-    private $getDeclarationByName(name: string): TDeclaration | TNativeItem | TNativeFunc[] | null {
-        if (this.nativeContext.values[name]){
-            return this.nativeContext.values[name]
-        }
-        return this.currentSymbolTable.getDeclarationByName(name)
-    }
-
-    private $CHECK_ARGUMENTS(declaredArgs: TFunctionArgDeclaration[], actualArgs: TAstNode[]) {
+    private $CHECK_ARGUMENTS(declaredArgs: any[], actualArgs: TAstNode[]) {
 
     }
 
@@ -82,7 +75,8 @@ export class RideVisitor extends RideVisitorConstructor {
                              | TLiteral
     ): TTypeRef {
         if ('func' in typelessNode) {
-            let decl = this.$getDeclarationByName(typelessNode.func);
+            const fName = typelessNode.func
+            let decl = this.nativeContext.funcByName(fName) || this.currentSymbolTable.funcByName(typelessNode.func);
             if (decl == null) {
                 const {position} = typelessNode;
                 this.errors.push({
@@ -94,11 +88,12 @@ export class RideVisitor extends RideVisitorConstructor {
                 // if (typeof decl === 'function')
                 //     decl = decl(...typelessNode.args.map(arg => arg && arg.type));
                 this.$CHECK_ARGUMENTS(decl.args, typelessNode.args);
-                return decl.resultType;
+                return decl.resultType as any;
             }
         }
         else if ('ref' in typelessNode) {
-            const decl = this.currentSymbolTable.getDeclarationByName(typelessNode.ref) as TVaribleDeclaration | null;
+            const vName = typelessNode.ref
+            const decl = this.nativeContext.varByName(vName) || this.currentSymbolTable.varByName(vName);
             if (decl == null) {
                 const {position} = typelessNode;
                 this.errors.push({
@@ -107,7 +102,7 @@ export class RideVisitor extends RideVisitorConstructor {
                 });
                 return 'Unknown';
             } else {
-                return decl.type;
+                return decl.type as any;
             }
         }
         else if ('fieldAccess' in typelessNode) {
@@ -168,8 +163,12 @@ export class RideVisitor extends RideVisitorConstructor {
     }
 
     DECL(cst: any) {
-        const decl = this.visit(cst.DECLARATION);
-        this.currentSymbolTable.addDeclaration(decl);
+        const decl: TVaribleDeclaration | TFunctionDeclaration = this.visit(cst.DECLARATION);
+        if('resultType' in decl){
+            this.currentSymbolTable.addFunction(decl)
+        }else {
+            this.currentSymbolTable.addVariable(decl)
+        }
     }
 
     FUNC(cst: any, injectedVariables?: TVaribleDeclaration[]): TFunctionDeclaration {
@@ -180,7 +179,7 @@ export class RideVisitor extends RideVisitorConstructor {
         // Inject varibles to scope. E.g.: annotated functions
         if (injectedVariables) {
             injectedVariables.forEach(variable =>
-                this.currentSymbolTable.addDeclaration(variable));
+                this.currentSymbolTable.addVariable(variable));
         }
         const args = this.visitArr(cst.FUNCTION_ARG);
         const value = this.visit(cst.FUNCTION_BODY);
@@ -233,7 +232,7 @@ export class RideVisitor extends RideVisitorConstructor {
             type: typeIdentifier.image,
             // value: null
         };
-        this.currentSymbolTable.addDeclaration({
+        this.currentSymbolTable.addVariable({
             ...result,
             position: extractPosition(identifier),
             value: null
@@ -355,7 +354,7 @@ export class RideVisitor extends RideVisitorConstructor {
             caseType = this.visit(cst.CASE_TYPE);
             // Todo: check matchType to present in type symbol table
             caseVar = this.visit(cst.CASE_VAR);
-            this.currentSymbolTable.addDeclaration({
+            this.currentSymbolTable.addVariable({
                 position: extractPosition(caseVar),
                 type: caseType.image,
                 name: caseVar.image,
