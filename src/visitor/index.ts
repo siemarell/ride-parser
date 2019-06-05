@@ -19,7 +19,7 @@ import {
     TFunctionDeclaration, TIfElse,
     TLiteral, TMatch, TMatchCase,
     TRef,
-    TVaribleDeclaration
+    TVaribleDeclaration, WithPosition
 } from './types';
 import { CstNode } from 'chevrotain';
 import { NativeContext } from './NativeContext';
@@ -62,7 +62,7 @@ export class RideVisitor extends RideVisitorConstructor {
         return this.symbolTableStack[this.symbolTableStack.length - 1];
     }
 
-    private $CHECK_ARGUMENTS(declaredArgs: any[], actualArgs: TAstNode[]) {
+    private $CHECK_ARGUMENTS(declaredArgs: TFunctionArgDeclaration[], actualArgs: TAstNode[]) {
 
     }
 
@@ -75,8 +75,10 @@ export class RideVisitor extends RideVisitorConstructor {
                              | TLiteral
     ): TTypeRef {
         if ('func' in typelessNode) {
-            const fName = typelessNode.func
-            let decl = this.nativeContext.funcByName(fName) || this.currentSymbolTable.funcByName(typelessNode.func);
+            const {func, args} = typelessNode
+            let decl = this.nativeContext.funcBySignature(func, args.map(arg => arg.type))
+                || this.currentSymbolTable.funcByName(typelessNode.func);
+
             if (decl == null) {
                 const {position} = typelessNode;
                 this.errors.push({
@@ -85,10 +87,13 @@ export class RideVisitor extends RideVisitorConstructor {
                 });
                 return 'Unknown';
             } else {
-                // if (typeof decl === 'function')
-                //     decl = decl(...typelessNode.args.map(arg => arg && arg.type));
-                this.$CHECK_ARGUMENTS(decl.args, typelessNode.args);
-                return decl.resultType as any;
+                if (typeof decl === 'function')
+                    decl = (decl as any)(...typelessNode.args.map(arg => arg && arg.type));
+                if (Array.isArray(decl)){
+
+                }
+                //this.$CHECK_ARGUMENTS(decl.args, typelessNode.args);
+                return decl!.resultType as any;
             }
         }
         else if ('ref' in typelessNode) {
@@ -128,13 +133,13 @@ export class RideVisitor extends RideVisitorConstructor {
         } else return leftResult;
     };
 
-    visitArr(nodes: CstNode[], opts?: any) {
+    $visitArr(nodes: CstNode[], opts?: any) {
         return (nodes || []).map((node: any) => super.visit(node, opts));
     }
 
     DAPP(cst: any) {
-        this.visitArr(cst.DECL);
-        const publicFunctions = this.visitArr(cst.ANNOTATEDFUNC);
+        this.$visitArr(cst.DECL);
+        const publicFunctions = this.$visitArr(cst.ANNOTATEDFUNC);
 
         return {
             symbolTable: this.rootSymbolTable,
@@ -144,7 +149,7 @@ export class RideVisitor extends RideVisitorConstructor {
     }
 
     SCRIPT(cst: any) {
-        this.visitArr(cst.DECL);
+        this.$visitArr(cst.DECL);
         const expression = this.visit(cst.EXPR);
 
         // todo: check expression returns boolean
@@ -163,7 +168,7 @@ export class RideVisitor extends RideVisitorConstructor {
     }
 
     DECL(cst: any) {
-        const decl: TVaribleDeclaration | TFunctionDeclaration = this.visit(cst.DECLARATION);
+        const decl: (TVaribleDeclaration | TFunctionDeclaration) & WithPosition = this.visit(cst.DECLARATION);
         if('resultType' in decl){
             this.currentSymbolTable.addFunction(decl)
         }else {
@@ -171,7 +176,7 @@ export class RideVisitor extends RideVisitorConstructor {
         }
     }
 
-    FUNC(cst: any, injectedVariables?: TVaribleDeclaration[]): TFunctionDeclaration {
+    FUNC(cst: any, injectedVariables?: (TVaribleDeclaration & WithPosition)[]): TFunctionDeclaration & WithPosition {
         const identifier = this.visit(cst.FUNCTION_NAME);
 
         this.symbolTableStack.push(new SymbolTable(this.currentSymbolTable));
@@ -181,7 +186,7 @@ export class RideVisitor extends RideVisitorConstructor {
             injectedVariables.forEach(variable =>
                 this.currentSymbolTable.addVariable(variable));
         }
-        const args = this.visitArr(cst.FUNCTION_ARG);
+        const args = this.$visitArr(cst.FUNCTION_ARG);
         const value = this.visit(cst.FUNCTION_BODY);
         const resultType = this.$DEFINE_TYPE(value);
 
@@ -196,8 +201,8 @@ export class RideVisitor extends RideVisitorConstructor {
         };
     }
 
-    ANNOTATEDFUNC(cst: any): TFunctionDeclaration {
-        let injectVar: TVaribleDeclaration;
+    ANNOTATEDFUNC(cst: any): TFunctionDeclaration & WithPosition {
+        let injectVar: TVaribleDeclaration & WithPosition;
         const injectIdentifier = this.visit(cst.IDENTIFIER);
         switch (cst.Annotation[0].image) {
             case '@Callable':
@@ -241,7 +246,7 @@ export class RideVisitor extends RideVisitorConstructor {
         return result;
     }
 
-    LET(cst: any): TVaribleDeclaration {
+    LET(cst: any): TVaribleDeclaration & WithPosition{
         const identifier = this.visit(cst.VAR_NAME);
         const value = this.visit(cst.VAR_VALUE);
         return {
@@ -254,7 +259,7 @@ export class RideVisitor extends RideVisitorConstructor {
 
     BLOCK(cst: any) {
         this.symbolTableStack.push(new SymbolTable(this.currentSymbolTable));
-        this.visitArr(cst.BLOCK_DECLARATIONS);
+        this.$visitArr(cst.BLOCK_DECLARATIONS);
         const result = this.visit(cst.BLOCK_VALUE);
         this.symbolTableStack.pop();
         return result;
@@ -334,7 +339,7 @@ export class RideVisitor extends RideVisitorConstructor {
     MATCH(cst: any): TMatch {
         const match: Exclude<TAstNode, TLiteral> = this.visit(cst.MATCH_EXPR);
         // Todo: Check match type to be union
-        const cases: TMatchCase[] = this.visitArr(cst.MATCH_CASE);
+        const cases: TMatchCase[] = this.$visitArr(cst.MATCH_CASE);
 
         //Todo: Check cases types to cover all match types
         const type = TypeTable.union(...cases.map(x => x.caseValue.type));
@@ -356,7 +361,7 @@ export class RideVisitor extends RideVisitorConstructor {
             caseVar = this.visit(cst.CASE_VAR);
             this.currentSymbolTable.addVariable({
                 position: extractPosition(caseVar),
-                type: caseType.image,
+                type: caseType.ref,
                 name: caseVar.image,
                 value: null
             });
@@ -382,7 +387,7 @@ export class RideVisitor extends RideVisitorConstructor {
         const typelessNode = {
             position: extractPosition(funcId),
             func: funcId.image,
-            args: this.visitArr(cst.FUNCTION_ARGS)
+            args: this.$visitArr(cst.FUNCTION_ARGS)
         };
         return {
             ...typelessNode,

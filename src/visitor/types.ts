@@ -14,6 +14,9 @@ export type TPos = {
     endColumn: number,
 }
 
+export type WithPosition = {
+    position: TPos
+}
 // AST Types
 export type TRef = {
     position: TPos
@@ -68,7 +71,7 @@ export type TAstNode = TRef | TLiteral | TFieldAccess | TFunctionCall | TMatch |
 
 // DECLARATION TYPES
 export type TVaribleDeclaration = {
-    position: TPos,
+   // position: TPos,
     name: string,
     type: TTypeRef,
     value: any,
@@ -77,7 +80,7 @@ export type TVaribleDeclaration = {
 export type TFunctionArgDeclaration = {name: string, type: TTypeRef}
 
 export type TFunctionDeclaration = {
-    position: TPos
+    //position: TPos
     name: string
     args: TFunctionArgDeclaration[]
     resultType: TTypeRef

@@ -20,6 +20,7 @@
   "dependencies": {
     "@waves/marshall": "^0.7.6",
     "@waves/ride-js": "^0.17.7",
-    "chevrotain": "^4.3.3"
+    "chevrotain": "^4.3.3",
+    "tslib": "^1.9.3"
   }
 }
