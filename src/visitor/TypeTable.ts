@@ -1,21 +1,22 @@
-import { TType, TStructField } from '@waves/ride-js';
+import { TType, TStructField, ISriptInfo, getTypes } from '@waves/ride-js';
 
 export type TTypeRef = string | string[]
 
 export class TypeTable {
     private _values: Record<string, TType> = {};
 
-    constructor(tdocs: TStructField[]){
-        tdocs.forEach(({name, type}) => this.addDefinition(name, type))
-    }
-    addDefinition(name: string, value: TType) {
-        this._values[name] = value;
-    }
+    private static _instances: Record<string, TypeTable> = {};
 
-    getDefinition(name: string): TType | null {
-        return this._values[name] || null;
+    static for(info: ISriptInfo): TypeTable {
+        const key = `${info.contentType}-${info.scriptType}-${info.stdLibVersion}`;
+        if (!this._instances[key]) {
+            const tTable = new TypeTable();
+            const tDocs = getTypes(info.stdLibVersion, info.scriptType === 2);
+            tDocs.forEach(({name, type}) => tTable.addDefinition(name, type));
+            this._instances[key] = tTable
+        }
+        return this._instances[key];
     }
-
 
     static union(...types: (TTypeRef | TTypeRef[])[]): TTypeRef {
         const resultType: string[] = [];
@@ -36,4 +37,13 @@ export class TypeTable {
         else if (resultType.length === 1) return resultType[0];
         return resultType;
     }
+
+    addDefinition(name: string, value: TType) {
+        this._values[name] = value;
+    }
+
+    getDefinition(name: string): TType | null {
+        return this._values[name] || null;
+    }
+
 }

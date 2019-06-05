@@ -1,10 +1,18 @@
-import { getFunctionsDoc, getVarsDoc, scriptInfo, getTypes, TFunctionArgument, TFunction } from '@waves/ride-js';
+import {
+    getFunctionsDoc,
+    getVarsDoc,
+    scriptInfo,
+    getTypes,
+    TFunctionArgument,
+    TFunction,
+    ISriptInfo
+} from '@waves/ride-js';
 
 import { rideParser } from '../parser';
 import { SymbolTable } from './SymbolTable';
 import { TypeTable, TTypeRef } from './TypeTable';
 import {
-    TAstNode,
+    TAstNode, TDeclaration,
     TError,
     TFieldAccess, TFunctionArgDeclaration,
     TFunctionCall,
@@ -14,6 +22,7 @@ import {
     TVaribleDeclaration
 } from './types';
 import { CstNode } from 'chevrotain';
+import { NativeContext, TNativeFunc, TNativeItem } from './NativeContext';
 
 const RideVisitorConstructor = rideParser.getBaseCstVisitorConstructor();
 
@@ -29,7 +38,9 @@ function extractPosition(token: any) {
 }
 
 export class RideVisitor extends RideVisitorConstructor {
-    rootSymbolTable = new SymbolTable();
+    nativeContext: NativeContext;
+
+    rootSymbolTable: SymbolTable = new SymbolTable();
 
     symbolTableStack = [this.rootSymbolTable];
 
@@ -37,23 +48,25 @@ export class RideVisitor extends RideVisitorConstructor {
 
     errors: TError[] = [];
 
-    constructor(info: ReturnType<typeof scriptInfo>) {
+    constructor(info: ISriptInfo) {
         super();
-        const fDocs = getFunctionsDoc(info.stdLibVersion, info.scriptType === 2);
-        const vDocs = getVarsDoc(info.stdLibVersion, info.scriptType === 2);
-        const tDocs = getTypes(info.stdLibVersion, info.scriptType === 2);
-        fDocs.forEach(fDoc => {
-            this.rootSymbolTable.addDeclaration(fDoc as any)
-        })
-        this.typeTable = new TypeTable(tDocs);
+        this.typeTable = TypeTable.for(info);
+        this.nativeContext = NativeContext.for(info)
 
-        console.log(this.typeTable)
+
         // This helper will detect any missing or redundant methods on this visitor
         this.validateVisitor();
     }
 
     get currentSymbolTable() {
         return this.symbolTableStack[this.symbolTableStack.length - 1];
+    }
+
+    private $getDeclarationByName(name: string): TDeclaration | TNativeItem | TNativeFunc[] | null {
+        if (this.nativeContext.values[name]){
+            return this.nativeContext.values[name]
+        }
+        return this.currentSymbolTable.getDeclarationByName(name)
     }
 
     private $CHECK_ARGUMENTS(declaredArgs: TFunctionArgDeclaration[], actualArgs: TAstNode[]) {
@@ -69,7 +82,7 @@ export class RideVisitor extends RideVisitorConstructor {
                              | TLiteral
     ): TTypeRef {
         if ('func' in typelessNode) {
-            let decl = this.currentSymbolTable.getDeclarationByName(typelessNode.func) as TFunctionDeclaration | null;
+            let decl = this.$getDeclarationByName(typelessNode.func);
             if (decl == null) {
                 const {position} = typelessNode;
                 this.errors.push({
@@ -78,8 +91,8 @@ export class RideVisitor extends RideVisitorConstructor {
                 });
                 return 'Unknown';
             } else {
-                if (typeof decl === 'function')
-                    decl = decl(...typelessNode.args.map(arg => arg && arg.type));
+                // if (typeof decl === 'function')
+                //     decl = decl(...typelessNode.args.map(arg => arg && arg.type));
                 this.$CHECK_ARGUMENTS(decl.args, typelessNode.args);
                 return decl.resultType;
             }

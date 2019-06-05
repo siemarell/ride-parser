@@ -75,13 +75,15 @@ export type TVaribleDeclaration = {
 }
 
 export type TFunctionArgDeclaration = {name: string, type: TTypeRef}
-export type TFunctionDeclarationBasic = {
+
+export type TFunctionDeclaration = {
     position: TPos
     name: string
     args: TFunctionArgDeclaration[]
     resultType: TTypeRef
     value: any
 }
-export type TFunctionDeclarationGeneric = (...args: TTypeRef[]) => TFunctionDeclarationBasic
-export type TFunctionDeclaration = TFunctionDeclarationBasic | TFunctionDeclarationGeneric
+
+// export type TFunctionDeclarationGeneric = (...args: TTypeRef[]) => TFunctionDeclarationBasic
+// export type TFunctionDeclaration = TFunctionDeclarationBasic | TFunctionDeclarationGeneric
 export type TDeclaration = TVaribleDeclaration | TFunctionDeclaration
