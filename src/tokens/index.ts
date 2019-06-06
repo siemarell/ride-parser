@@ -77,9 +77,16 @@ export const Commentary = createToken({
     pattern: /#.*\n/,
     group: Lexer.SKIPPED
 });
+export const NewLine = createToken({
+    name: "WhiteSpace",
+    pattern: /[^\S\r\n]/,
+    // pattern: /\s+/,
+    group: Lexer.SKIPPED
+});
 export const WhiteSpace = createToken({
     name: "WhiteSpace",
-    pattern: /\s+/,
+    pattern: /[^\S\r\n]/,
+    // pattern: /\s+/,
     group: Lexer.SKIPPED
 });
 

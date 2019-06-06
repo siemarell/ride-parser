@@ -112,6 +112,8 @@ export class RideVisitor extends RideVisitorConstructor {
             }
         }
         else if ('fieldAccess' in typelessNode) {
+            const {item, fieldAccess, position} = typelessNode;
+            // Todo: make field incersection on unions and check types for existance
             return 'DefineType not implemented for FIELD_ACCESS';
         } else if ('listAccess' in typelessNode) {
             return 'DefineType not implemented for LIST_ACCESS';
@@ -300,19 +302,16 @@ export class RideVisitor extends RideVisitorConstructor {
         return result;
     }
 
-    GETTABLE_EXPR(cst: any): TFunctionCall | TFieldAccess | TListAccess {
+    GETTABLE_EXPR(cst: any):TAstNode {
         const item = this.visit(cst['ITEM']);
         if ('FUNCTION_CALL' in cst) {
             return this.FUNCTION_CALL(cst.FUNCTION_CALL[0].children, item);
-            // // inject ITEM as first function arg and proccess as regular FUNCTION CALL
-            // cst['FUNCTION_CALL'][0].children.FUNCTION_ARGS.unshift(cst['ITEM'][0]);
-            //  return this.visit(cst.FUNCTION_CALL);
         } else if ('FIELD_ACCESS' in cst) {
             const accessId = this.visit(cst.FIELD_ACCESS);
             const typelessNode = {
                 position: extractPosition(accessId),
                 item: item,
-                fieldAccess: this.visit(cst.FIELD_ACCESS),
+                fieldAccess: accessId.image,
             };
 
             return {

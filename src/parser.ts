@@ -174,7 +174,10 @@ class RideParser extends Parser {
         ]);
         this.MANY(() => {
             this.OR2([
-                {ALT: () => this.SUBRULE(this.LIST_ACCESS)},
+                {ALT: () => this.SUBRULE(this.LIST_ACCESS),GATE:()=>{
+                    debugger
+                       return true
+                    }},
                 {
                     ALT: () => {
                         this.CONSUME(Dot);

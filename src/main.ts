@@ -8,7 +8,7 @@ import { RideVisitor } from './visitor';
 export function main (){
     const lexer = new Lexer(allTokens)
 
-    const text = fs.readFileSync('dapp.ride', {encoding: 'utf-8'});
+    const text = fs.readFileSync('assets/dapp2.ride', {encoding: 'utf-8'});
     const info = scriptInfo(text);
 
     let lexingResult = lexer.tokenize(text);
