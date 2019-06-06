@@ -63,7 +63,7 @@ export class RideVisitor extends RideVisitorConstructor {
     }
 
     private $CHECK_ARGUMENTS(declaredArgs: TFunctionArgDeclaration[], actualArgs: TAstNode[]) {
-
+        //ToDo: implement
     }
 
     private $DEFINE_TYPE(typelessNode:
@@ -87,12 +87,11 @@ export class RideVisitor extends RideVisitorConstructor {
                 });
                 return 'Unknown';
             } else {
-                if (typeof decl === 'function')
-                    decl = (decl as any)(...typelessNode.args.map(arg => arg && arg.type));
-                if (Array.isArray(decl)){
 
-                }
-                //this.$CHECK_ARGUMENTS(decl.args, typelessNode.args);
+                if (typeof decl === 'function')
+                    decl = (decl as any)(...typelessNode.args.map(arg => arg && arg.type)) as TFunctionDeclaration;
+
+                this.$CHECK_ARGUMENTS(decl.args, typelessNode.args);
                 return decl!.resultType as any;
             }
         }
@@ -207,7 +206,7 @@ export class RideVisitor extends RideVisitorConstructor {
         switch (cst.Annotation[0].image) {
             case '@Callable':
                 injectVar = {
-                    position: injectIdentifier,
+                    position: extractPosition(injectIdentifier),
                     name: injectIdentifier.image,
                     type: 'Invocation',
                     value: null
@@ -224,7 +223,7 @@ export class RideVisitor extends RideVisitorConstructor {
             default:
                 return null as any;
         }
-        return this.FUNC(cst.FUNC[0], [injectVar]);
+        return this.FUNC(cst.FUNC[0].children, [injectVar]);
     }
 
     FUNCTION_ARG(cst: any): TFunctionArgDeclaration {
@@ -234,7 +233,7 @@ export class RideVisitor extends RideVisitorConstructor {
         const result = {
             //position: identifier,
             name: identifier.image,
-            type: typeIdentifier.image,
+            type: typeIdentifier.ref,
             // value: null
         };
         this.currentSymbolTable.addVariable({
@@ -466,7 +465,7 @@ export class RideVisitor extends RideVisitorConstructor {
         // Todo: check type in TypeTable
         return {
             position: extractPosition(cst.Identifier[0]),
-            ref: cst.Identifier[0].image,
+            ref: cst.Identifier[0].image as string,
         }
     }
 }

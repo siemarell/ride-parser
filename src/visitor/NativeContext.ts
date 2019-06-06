@@ -1,4 +1,4 @@
-import { getFunctionsDoc, getVarsDoc, ISriptInfo, TFunction, TType } from '@waves/ride-js';
+import { getFunctionsDoc, getTypes, getVarsDoc, ISriptInfo, TFunction, TStruct, TType } from '@waves/ride-js';
 import { TDeclaration, TFunctionDeclaration, TVaribleDeclaration } from './types';
 import { binaryOperators, unaryOperators } from './operatorFunctions';
 import { TTypeRef } from './TypeTable';
@@ -12,6 +12,12 @@ export class NativeContext {
     private static _instances: Record<string, NativeContext> = {};
 
     constructor(info: ISriptInfo) {
+        const vDocs: Record<string, TVaribleDeclaration> = getVarsDoc(info.stdLibVersion, info.scriptType === 2)
+            .reduce((acc, item) => ({...acc, [item.name]: {...item, value: null, type: typeToTypeRef(item.type)}}),
+                {} as Record<string, TVaribleDeclaration>);
+        this.variables = vDocs;
+
+
         const fDocs = getFunctionsDoc(info.stdLibVersion, info.scriptType === 2).reduce((acc, item) => {
             const nativeFunc = {
                 resultType: typeToTypeRef(item.resultType),
@@ -27,12 +33,20 @@ export class NativeContext {
             }
             return acc;
         }, {} as any);
-        const vDocs = getVarsDoc(info.stdLibVersion, info.scriptType === 2).reduce((acc, item) => {
-            acc[item.name] = {...item, type: typeToTypeRef(item.type)};
-            return acc;
-        }, {} as any);
-        this.variables = vDocs;
-        this.functions = {...fDocs, ...globalSymbols};
+
+        const tDocs = getTypes(info.stdLibVersion, info.scriptType === 2);
+        const typeConstructors = tDocs
+            .map(x => x.type)
+            .filter(isTStruct)
+            .map((x) => ({
+                    name: x.typeName,
+                    args: x.fields.map(x => ({...x, type: typeToTypeRef(x.type)})),
+                    resultType: x.typeName,
+                    value: null
+                })
+            ).reduce((acc, item) => ({...acc, [item.name]: item}), {} as Record<string, TFunctionDeclaration>);
+
+        this.functions = {...fDocs, ...typeConstructors, ...globalSymbols};
     }
 
     static for(info: ISriptInfo): NativeContext {
@@ -48,20 +62,22 @@ export class NativeContext {
     }
 
     funcBySignature(name: string, argTypes: TTypeRef[]): TFunctionDeclaration | null {
+        // FixMe: now simply gives first function. Should use arg types to determine correct function instead
         const decl = this.functions[name];
         return Array.isArray(decl) ?
             decl[0] :
-            decl || null
+            decl || null;
     }
 }
+
 // For some reason flat doesnt work with ts-node
 Object.defineProperty(Array.prototype, 'flat', {
-    value: function(depth:any = 1) {
+    value: function (depth: any = 1) {
         return this.reduce(function (flat: any, toFlatten: any) {
-            return flat.concat((Array.isArray(toFlatten) && (depth>1)) ? toFlatten.flat(depth-1) : toFlatten);
+            return flat.concat((Array.isArray(toFlatten) && (depth > 1)) ? toFlatten.flat(depth - 1) : toFlatten);
         }, []);
     }
-})
+});
 
 function typeToTypeRef(x: TType): TTypeRef {
     if (typeof x === 'string') return x;
@@ -69,3 +85,5 @@ function typeToTypeRef(x: TType): TTypeRef {
     else if ('listOf' in x) return `List[${typeToTypeRef(x.listOf)}]`;
     else return x.typeName;
 }
+
+const isTStruct = (item: TType): item is TStruct => typeof item !== 'string' && !Array.isArray(item);

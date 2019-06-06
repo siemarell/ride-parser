@@ -2,7 +2,7 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
- @Callable(i)
+@Callable(i)
 func approveCredit(client: String, amount: Int, target: Int, lockHash: ByteVector) = {
     if (this == i.caller && !isDefined(getBoolean(this, client + "_status"))) then {
         WriteSet([
@@ -17,7 +17,7 @@ func approveCredit(client: String, amount: Int, target: Int, lockHash: ByteVecto
 
  }
 
- @Callable(i)
+@Callable(i)
 func getMoney(txId: String) = {
 
      let callerStr = toBase58String(i.caller.bytes)
@@ -47,7 +47,7 @@ func getMoney(txId: String) = {
 
  }
 
- @Callable(i)
+@Callable(i)
 func returnMoney() = {
     let callerStr = toBase58String(i.caller.bytes)
     let status = match( this.getString(callerStr + "_status")){
@@ -68,7 +68,7 @@ func returnMoney() = {
     }
 }
 
- @Callable(i)
+@Callable(i)
 func cancelContract() = {
     let callerStr = toBase58String(i.caller.bytes)
     let status = match( this.getString(callerStr + "_status")){
@@ -79,7 +79,7 @@ func cancelContract() = {
     else {throw("Cannot cancel credit. Money has already been taken")}
 }
 
- @Verifier(tx)
+@Verifier(tx)
 func verify() = {
     match(tx) {
         case t:DataTransaction => false

@@ -14,7 +14,7 @@ import {
 
 const rideParserOpts: IParserConfig = {
     maxLookahead: 2,
-    recoveryEnabled: true
+    //recoveryEnabled: true
 };
 
 class RideParser extends Parser {
@@ -228,7 +228,7 @@ class RideParser extends Parser {
         this.CONSUME(LSquare);
         this.MANY_SEP({
             SEP: Comma,
-            DEF: (this.SUBRULE(this.EXPR, {LABEL: 'LIST_ITEMS'}))
+            DEF: this.SUBRULE(this.EXPR, {LABEL: 'LIST_ITEMS'})
         });
         this.CONSUME(RSquare);
     });
