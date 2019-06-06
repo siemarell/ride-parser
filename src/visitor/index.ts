@@ -16,13 +16,14 @@ import {
     TError,
     TFieldAccess, TFunctionArgDeclaration,
     TFunctionCall,
-    TFunctionDeclaration, TIfElse,
+    TFunctionDeclaration, TIfElse, TListAccess, TListLiteral,
     TLiteral, TMatch, TMatchCase,
     TRef,
     TVaribleDeclaration, WithPosition
 } from './types';
 import { CstNode } from 'chevrotain';
 import { NativeContext } from './NativeContext';
+import { IntegerLiteral } from '../tokens';
 
 const RideVisitorConstructor = rideParser.getBaseCstVisitorConstructor();
 
@@ -51,7 +52,7 @@ export class RideVisitor extends RideVisitorConstructor {
     constructor(info: ISriptInfo) {
         super();
         this.typeTable = TypeTable.for(info);
-        this.nativeContext = NativeContext.for(info)
+        this.nativeContext = NativeContext.for(info);
 
 
         // This helper will detect any missing or redundant methods on this visitor
@@ -70,12 +71,13 @@ export class RideVisitor extends RideVisitorConstructor {
                              | Omit<TFunctionCall, "type">
                              | Omit<TFieldAccess, "type">
                              | Omit<TRef, "type">
+                             | Omit<TListAccess, "type">
                              | TIfElse
                              | TMatch
                              | TLiteral
     ): TTypeRef {
         if ('func' in typelessNode) {
-            const {func, args} = typelessNode
+            const {func, args} = typelessNode;
             let decl = this.nativeContext.funcBySignature(func, args.map(arg => arg.type))
                 || this.currentSymbolTable.funcByName(typelessNode.func);
 
@@ -96,7 +98,7 @@ export class RideVisitor extends RideVisitorConstructor {
             }
         }
         else if ('ref' in typelessNode) {
-            const vName = typelessNode.ref
+            const vName = typelessNode.ref;
             const decl = this.nativeContext.varByName(vName) || this.currentSymbolTable.varByName(vName);
             if (decl == null) {
                 const {position} = typelessNode;
@@ -111,6 +113,8 @@ export class RideVisitor extends RideVisitorConstructor {
         }
         else if ('fieldAccess' in typelessNode) {
             return 'DefineType not implemented for FIELD_ACCESS';
+        } else if ('listAccess' in typelessNode) {
+            return 'DefineType not implemented for LIST_ACCESS';
         } else return typelessNode.type;
     }
 
@@ -168,10 +172,10 @@ export class RideVisitor extends RideVisitorConstructor {
 
     DECL(cst: any) {
         const decl: (TVaribleDeclaration | TFunctionDeclaration) & WithPosition = this.visit(cst.DECLARATION);
-        if('resultType' in decl){
-            this.currentSymbolTable.addFunction(decl)
-        }else {
-            this.currentSymbolTable.addVariable(decl)
+        if ('resultType' in decl) {
+            this.currentSymbolTable.addFunction(decl);
+        } else {
+            this.currentSymbolTable.addVariable(decl);
         }
     }
 
@@ -245,7 +249,7 @@ export class RideVisitor extends RideVisitorConstructor {
         return result;
     }
 
-    LET(cst: any): TVaribleDeclaration & WithPosition{
+    LET(cst: any): TVaribleDeclaration & WithPosition {
         const identifier = this.visit(cst.VAR_NAME);
         const value = this.visit(cst.VAR_VALUE);
         return {
@@ -296,27 +300,29 @@ export class RideVisitor extends RideVisitorConstructor {
         return result;
     }
 
-    GETTABLE_EXPR(cst: any): TFunctionCall | TFieldAccess {
+    GETTABLE_EXPR(cst: any): TFunctionCall | TFieldAccess | TListAccess {
+        const item = this.visit(cst['ITEM']);
         if ('FUNCTION_CALL' in cst) {
-            cst['FUNCTION_CALL'][0].children.FUNCTION_ARGS.unshift(cst['ITEM'][0]);
-            return this.visit(cst.FUNCTION_CALL);
-        } else {
-            const item = this.visit(cst['ITEM']);
-            if ('FIELD_ACCESS' in cst) {
-                const accessId = this.visit(cst.FIELD_ACCESS);
-                const typelessNode = {
-                    position: extractPosition(accessId),
-                    item: item,
-                    fieldAccess: this.visit(cst.FIELD_ACCESS),
-                };
+            return this.FUNCTION_CALL(cst.FUNCTION_CALL[0].children, item);
+            // // inject ITEM as first function arg and proccess as regular FUNCTION CALL
+            // cst['FUNCTION_CALL'][0].children.FUNCTION_ARGS.unshift(cst['ITEM'][0]);
+            //  return this.visit(cst.FUNCTION_CALL);
+        } else if ('FIELD_ACCESS' in cst) {
+            const accessId = this.visit(cst.FIELD_ACCESS);
+            const typelessNode = {
+                position: extractPosition(accessId),
+                item: item,
+                fieldAccess: this.visit(cst.FIELD_ACCESS),
+            };
 
-                return {
-                    ...typelessNode,
-                    type: this.$DEFINE_TYPE(typelessNode)
-                };
-            }
-            return item;
-        }
+            return {
+                ...typelessNode,
+                type: this.$DEFINE_TYPE(typelessNode)
+            };
+        } else if ('LIST_ACCESS' in cst) {
+            return this.LIST_ACCESS(cst.LIST_ACCESS[0].children, item);
+        } else return item;
+
     }
 
     IF(cst: any) {
@@ -336,7 +342,7 @@ export class RideVisitor extends RideVisitorConstructor {
     }
 
     MATCH(cst: any): TMatch {
-        const match: Exclude<TAstNode, TLiteral> = this.visit(cst.MATCH_EXPR);
+        const match: Exclude<TAstNode, TLiteral | TListLiteral> = this.visit(cst.MATCH_EXPR);
         // Todo: Check match type to be union
         const cases: TMatchCase[] = this.$visitArr(cst.MATCH_CASE);
 
@@ -381,13 +387,16 @@ export class RideVisitor extends RideVisitorConstructor {
         };
     }
 
-    FUNCTION_CALL(cst: any): TFunctionCall {
+    FUNCTION_CALL(cst: any, firstArg?: TAstNode): TFunctionCall {
         const funcId = this.visit(cst.FUNCTION_NAME);
         const typelessNode = {
             position: extractPosition(funcId),
             func: funcId.image,
             args: this.$visitArr(cst.FUNCTION_ARGS)
         };
+
+        if (firstArg) typelessNode.args.unshift(firstArg);
+
         return {
             ...typelessNode,
             type: this.$DEFINE_TYPE(typelessNode)
@@ -395,7 +404,38 @@ export class RideVisitor extends RideVisitorConstructor {
     }
 
     LIST_LITERAL(cst: any) {
-        console.log('asd');
+        const items: TAstNode[] = this.$visitArr(cst.LIST_ITEMS);
+        const argsType = TypeTable.union(items.map(x => x.type))
+
+        return {
+            position: null,
+            items,
+            type: `LIST[${argsType}]`,
+        };
+    }
+
+    LIST_ACCESS(cst: any, node: TAstNode): TListAccess {
+        let listAccess;
+        let position;
+        if (cst.IntegerLiteral) {
+            const lit = this.LITERAL(cst);
+            listAccess = lit.value;
+            position = lit.position;
+        } else {
+            const ref: TRef = this.visit(cst.REFERENCE);
+            //Todo: check reference type to be integer
+            position = ref.position;
+            listAccess = ref.ref;
+        }
+
+        const typelessNode = {
+            position,
+            listAccess,
+            item: node,
+        };
+
+        const type = this.$DEFINE_TYPE(typelessNode);
+        return {...typelessNode, type};
     }
 
     LITERAL(cst: any): TLiteral {
@@ -430,12 +470,7 @@ export class RideVisitor extends RideVisitorConstructor {
                 value: cst.BooleanLiteral[0].image === 'true'
             };
         } else if ('LIST_LITERAL' in cst) {
-            const val = this.visit(cst.LIST_LITERAL);
-            return {
-                position: extractPosition(cst.LIST_LITERAL[0]),
-                type: 'LIST',
-                value: val
-            };
+            return this.visit(cst.LIST_LITERAL);
         } else {
             return {
                 position: null as any,
@@ -461,11 +496,11 @@ export class RideVisitor extends RideVisitorConstructor {
         };
     }
 
-    TYPE_REFERENCE(cst:any){
+    TYPE_REFERENCE(cst: any) {
         // Todo: check type in TypeTable
         return {
             position: extractPosition(cst.Identifier[0]),
             ref: cst.Identifier[0].image as string,
-        }
+        };
     }
 }

@@ -172,13 +172,30 @@ class RideParser extends Parser {
             {ALT: () => this.SUBRULE(this.FUNCTION_CALL, {LABEL: 'ITEM'})},
             {ALT: () => this.SUBRULE(this.REFERENCE, {LABEL: 'ITEM'})}
         ]);
-        this.OPTION(() => {
-            this.CONSUME(Dot);
-            this.OR1([
-                {ALT: () => this.SUBRULE1(this.FUNCTION_CALL)},
-                {ALT: () => this.SUBRULE1(this.IDENTIFIER, {LABEL: 'FIELD_ACCESS'})}
+        this.MANY(() => {
+            this.OR2([
+                {ALT: () => this.SUBRULE(this.LIST_ACCESS)},
+                {
+                    ALT: () => {
+                        this.CONSUME(Dot);
+                        this.OR1([
+                            {ALT: () => this.SUBRULE1(this.FUNCTION_CALL)},
+                            {ALT: () => this.SUBRULE1(this.IDENTIFIER, {LABEL: 'FIELD_ACCESS'})}
+                        ]);
+                    }
+                }
             ]);
+
         });
+    });
+
+    public LIST_ACCESS = this.RULE("LIST_ACCESS", () => {
+        this.CONSUME(LSquare);
+        this.OR([
+            {ALT: () => this.CONSUME(IntegerLiteral)},
+            {ALT: () => this.SUBRULE(this.REFERENCE)}
+        ]);
+        this.CONSUME(RSquare);
     });
 
     public IF = this.RULE("IF", () => {
@@ -228,9 +245,10 @@ class RideParser extends Parser {
         this.CONSUME(LSquare);
         this.MANY_SEP({
             SEP: Comma,
-            DEF: this.SUBRULE(this.EXPR, {LABEL: 'LIST_ITEMS'})
+            DEF: () => this.SUBRULE(this.EXPR, {LABEL: 'LIST_ITEMS'})
         });
         this.CONSUME(RSquare);
+        this.OPTION(() => this.SUBRULE(this.LIST_ACCESS));
     });
 
     public LITERAL = this.RULE("LITERAL", () => {

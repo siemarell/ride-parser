@@ -30,10 +30,22 @@ export type TLiteral = {
     type: TTypeRef,
 }
 
+export type TListLiteral = {
+    items: TAstNode[],
+    type: TTypeRef
+}
+
 export type TFieldAccess = {
     position: TPos
-    item: TRef | TFunctionCall
+    item: Exclude<TAstNode, TLiteral | TListLiteral>
     fieldAccess: string
+    type: TTypeRef
+}
+
+export type TListAccess = {
+    position: TPos
+    item: TAstNode
+    listAccess: number | string
     type: TTypeRef
 }
 
@@ -46,7 +58,7 @@ export type TFunctionCall = {
 
 export type TMatch = {
     position: TPos,
-    match: Exclude<TAstNode, TLiteral>,
+    match: Exclude<TAstNode, TLiteral | TListLiteral>,
     cases: TMatchCase[],
     type: TTypeRef
 }
@@ -66,7 +78,7 @@ export type TIfElse = {
     type: TTypeRef
 }
 
-export type TAstNode = TRef | TLiteral | TFieldAccess | TFunctionCall | TMatch | TIfElse
+export type TAstNode = TRef | TLiteral | TListLiteral | TListAccess | TFieldAccess | TFunctionCall | TMatch | TIfElse
 
 
 // DECLARATION TYPES
@@ -74,7 +86,7 @@ export type TVaribleDeclaration = {
    // position: TPos,
     name: string,
     type: TTypeRef,
-    value: any,
+    value: TAstNode | null,
 }
 
 export type TFunctionArgDeclaration = {name: string, type: TTypeRef}
@@ -84,7 +96,7 @@ export type TFunctionDeclaration = {
     name: string
     args: TFunctionArgDeclaration[]
     resultType: TTypeRef
-    value: any
+    value: TAstNode
 }
 
 // export type TFunctionDeclarationGeneric = (...args: TTypeRef[]) => TFunctionDeclarationBasic
