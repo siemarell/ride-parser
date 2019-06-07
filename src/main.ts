@@ -1,5 +1,5 @@
-import { Lexer } from 'chevrotain';
-import { allTokens } from './tokens';
+import { IToken, Lexer, tokenMatcher } from 'chevrotain';
+import { allTokens, WhiteSpace } from './tokens';
 import * as fs from "fs";
 import { scriptInfo } from '@waves/ride-js';
 import { rideParser as p } from './parser';
@@ -13,8 +13,18 @@ export function main (){
 
     let lexingResult = lexer.tokenize(text);
 
+    const tokens: IToken[] = []
+    lexingResult.tokens.forEach((t,i) => {
+        if (!tokenMatcher(t, WhiteSpace)){
+            tokens.push(t)
+            const prevToken = lexingResult.tokens[i-1];
+            if(prevToken && tokenMatcher(prevToken, WhiteSpace)) {
+                (t as any).afterSeparator = true
+            }
+        }
+    })
 
-    p.input = lexingResult.tokens;
+    p.input = tokens;
     console.log('Parser built');
     const cst = info.contentType === 1 ? p.SCRIPT(): p.DAPP();
     console.log(p.errors)

@@ -2,6 +2,10 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
+{-# STDLIB_VERSION 3 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
  # SPECIFY BEFORE SETTING THE CONTRACT!
 let registrationCost = 5
 let initBalance = 5
@@ -391,8 +395,8 @@ func transaction(gas: Int, script: String) = {
         let costs = estimate(script)
         let reserved = costs[0] + costs[1]
 
-         if validation.size() > 0 then throw(validation)
-        else
+        if validation.size() > 0 then throw(validation)
+        else{
             let utxPool = this.getStringValue(keyUtx)
             let utxSize = this.getIntegerValue(keyUtxSize)
             let newUtxPool = if (utxSize > 0) then utxPool + ";" + txBody else txBody
@@ -402,6 +406,7 @@ func transaction(gas: Int, script: String) = {
                 DataEntry(keyAccountPrefix + sender, addressOf(sender) + "," + regHeightOf(sender).toString() + "," + totalBalanceOf(sender).toString() + ","
                     + (availableBalanceOf(sender) - reserved).toString())
             ])}
+            }
 }
 
  @Verifier(tx)

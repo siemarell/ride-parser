@@ -1,4 +1,4 @@
-import { Parser, IParserConfig } from 'chevrotain';
+import { Parser, IParserConfig, IToken } from 'chevrotain';
 import {
     allTokens,
     Annotation, Arrow,
@@ -172,12 +172,13 @@ class RideParser extends Parser {
             {ALT: () => this.SUBRULE(this.FUNCTION_CALL, {LABEL: 'ITEM'})},
             {ALT: () => this.SUBRULE(this.REFERENCE, {LABEL: 'ITEM'})}
         ]);
-        this.MANY(() => {
-            this.OR2([
-                {ALT: () => this.SUBRULE(this.LIST_ACCESS),GATE:()=>{
-                    debugger
-                       return true
-                    }},
+        this.MANY({
+            GATE: () => {
+                const nextToken = this.LA(1);
+                return !(nextToken.image === '[' && (nextToken as any).afterSeparator);
+            },
+            DEF: () =>  this.OR2([
+                {ALT: () => this.SUBRULE(this.LIST_ACCESS)},
                 {
                     ALT: () => {
                         this.CONSUME(Dot);
@@ -187,8 +188,7 @@ class RideParser extends Parser {
                         ]);
                     }
                 }
-            ]);
-
+            ])
         });
     });
 
