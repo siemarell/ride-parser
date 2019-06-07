@@ -1,0 +1,1155 @@
+
+<!-- This is a generated file -->
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+  body {
+    background-color: hsl(30, 20%, 95%)
+  }
+</style>
+
+
+<link rel='stylesheet' href='https://unpkg.com/chevrotain@4.3.3/diagrams/diagrams.css'>
+
+<script src='https://unpkg.com/chevrotain@4.3.3/diagrams/vendor/railroad-diagrams.js'></script>
+<script src='https://unpkg.com/chevrotain@4.3.3/diagrams/src/diagrams_builder.js'></script>
+<script src='https://unpkg.com/chevrotain@4.3.3/diagrams/src/diagrams_behavior.js'></script>
+<script src='https://unpkg.com/chevrotain@4.3.3/diagrams/src/main.js'></script>
+
+<div id="diagrams" align="center"></div>    
+
+<script>
+    window.serializedGrammar = [
+  {
+    "type": "Rule",
+    "name": "DAPP",
+    "orgText": "function () {\n            _this.MANY(function () { return _this.SUBRULE(_this.DECL); });\n            _this.AT_LEAST_ONE(function () { return _this.SUBRULE(_this.ANNOTATEDFUNC); });\n        }",
+    "definition": [
+      {
+        "type": "Repetition",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "NonTerminal",
+            "name": "DECL",
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "type": "RepetitionMandatory",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "NonTerminal",
+            "name": "ANNOTATEDFUNC",
+            "idx": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "SCRIPT",
+    "orgText": "function () {\n            _this.MANY(function () { return _this.SUBRULE(_this.DECL); });\n            _this.SUBRULE(_this.EXPR);\n        }",
+    "definition": [
+      {
+        "type": "Repetition",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "NonTerminal",
+            "name": "DECL",
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "type": "NonTerminal",
+        "name": "EXPR",
+        "idx": 0
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "EXPR",
+    "orgText": "function () {\n            _this.SUBRULE(_this.OR_OP, { LABEL: 'BINARY_OPERATION' });\n        }",
+    "definition": [
+      {
+        "type": "NonTerminal",
+        "name": "OR_OP",
+        "idx": 0
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "DECL",
+    "orgText": "function () {\n            _this.OR([\n                { ALT: function () { return _this.SUBRULE(_this.FUNC, { LABEL: 'DECLARATION' }); } },\n                { ALT: function () { return _this.SUBRULE(_this.LET, { LABEL: 'DECLARATION' }); } }\n            ]);\n        }",
+    "definition": [
+      {
+        "type": "Alternation",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "FUNC",
+                "idx": 0
+              }
+            ]
+          },
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "LET",
+                "idx": 0
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "FUNC",
+    "orgText": "function () {\n            _this.CONSUME(tokens_1.Keywords.Func);\n            _this.SUBRULE(_this.IDENTIFIER, { LABEL: 'FUNCTION_NAME' });\n            _this.CONSUME(tokens_1.LPar);\n            _this.MANY_SEP({ SEP: tokens_1.Comma, DEF: function () { return _this.SUBRULE(_this.FUNCTION_ARG); } });\n            _this.CONSUME(tokens_1.RPar);\n            _this.CONSUME(tokens_1.Assignment);\n            _this.SUBRULE(_this.EXPR, { LABEL: 'FUNCTION_BODY' });\n        }",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "Func",
+        "label": "Func",
+        "idx": 0,
+        "pattern": "func"
+      },
+      {
+        "type": "NonTerminal",
+        "name": "IDENTIFIER",
+        "idx": 0
+      },
+      {
+        "type": "Terminal",
+        "name": "LPar",
+        "label": "(",
+        "idx": 0,
+        "pattern": "\\("
+      },
+      {
+        "type": "RepetitionWithSeparator",
+        "idx": 0,
+        "separator": {
+          "type": "Terminal",
+          "name": "Comma",
+          "label": ",",
+          "idx": 1,
+          "pattern": ","
+        },
+        "definition": [
+          {
+            "type": "NonTerminal",
+            "name": "FUNCTION_ARG",
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "type": "Terminal",
+        "name": "RPar",
+        "label": ")",
+        "idx": 0,
+        "pattern": "\\)"
+      },
+      {
+        "type": "Terminal",
+        "name": "Assignment",
+        "label": "=",
+        "idx": 0,
+        "pattern": "="
+      },
+      {
+        "type": "NonTerminal",
+        "name": "EXPR",
+        "idx": 0
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "ANNOTATEDFUNC",
+    "orgText": "function () {\n            _this.CONSUME(tokens_1.Annotation);\n            _this.CONSUME(tokens_1.LPar);\n            _this.SUBRULE(_this.IDENTIFIER);\n            _this.CONSUME(tokens_1.RPar);\n            _this.SUBRULE(_this.FUNC);\n        }",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "Annotation",
+        "label": "Annotation",
+        "idx": 0,
+        "pattern": "@(Verifier|Callable)"
+      },
+      {
+        "type": "Terminal",
+        "name": "LPar",
+        "label": "(",
+        "idx": 0,
+        "pattern": "\\("
+      },
+      {
+        "type": "NonTerminal",
+        "name": "IDENTIFIER",
+        "idx": 0
+      },
+      {
+        "type": "Terminal",
+        "name": "RPar",
+        "label": ")",
+        "idx": 0,
+        "pattern": "\\)"
+      },
+      {
+        "type": "NonTerminal",
+        "name": "FUNC",
+        "idx": 0
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "FUNCTION_ARG",
+    "orgText": "function () {\n            _this.SUBRULE(_this.IDENTIFIER, { LABEL: 'ARG_NAME' });\n            _this.CONSUME(tokens_1.Colon);\n            _this.SUBRULE1(_this.TYPE_REFERENCE, { LABEL: 'ARG_TYPE' });\n        }",
+    "definition": [
+      {
+        "type": "NonTerminal",
+        "name": "IDENTIFIER",
+        "idx": 0
+      },
+      {
+        "type": "Terminal",
+        "name": "Colon",
+        "label": ":",
+        "idx": 0,
+        "pattern": ":"
+      },
+      {
+        "type": "NonTerminal",
+        "name": "TYPE_REFERENCE",
+        "idx": 1
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "LET",
+    "orgText": "function () {\n            _this.CONSUME(tokens_1.Keywords.Let);\n            _this.SUBRULE(_this.IDENTIFIER, { LABEL: 'VAR_NAME' });\n            _this.CONSUME(tokens_1.Assignment);\n            _this.SUBRULE(_this.EXPR, { LABEL: 'VAR_VALUE' });\n        }",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "Let",
+        "label": "Let",
+        "idx": 0,
+        "pattern": "let"
+      },
+      {
+        "type": "NonTerminal",
+        "name": "IDENTIFIER",
+        "idx": 0
+      },
+      {
+        "type": "Terminal",
+        "name": "Assignment",
+        "label": "=",
+        "idx": 0,
+        "pattern": "="
+      },
+      {
+        "type": "NonTerminal",
+        "name": "EXPR",
+        "idx": 0
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "BLOCK",
+    "orgText": "function () {\n            _this.CONSUME(tokens_1.LCurly);\n            _this.MANY(function () { return _this.SUBRULE(_this.DECL, { LABEL: 'BLOCK_DECLARATIONS' }); });\n            _this.SUBRULE(_this.EXPR, { LABEL: 'BLOCK_VALUE' });\n            _this.CONSUME(tokens_1.RCurly);\n        }",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "LCurly",
+        "label": "{",
+        "idx": 0,
+        "pattern": "{"
+      },
+      {
+        "type": "Repetition",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "NonTerminal",
+            "name": "DECL",
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "type": "NonTerminal",
+        "name": "EXPR",
+        "idx": 0
+      },
+      {
+        "type": "Terminal",
+        "name": "RCurly",
+        "label": "}",
+        "idx": 0,
+        "pattern": "}"
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "OR_OP",
+    "orgText": "function () {\n            _this.SUBRULE(_this.AND_OP, { LABEL: 'LHS' });\n            _this.OPTION(function () {\n                _this.CONSUME(tokens_1.Operators.Or, { LABEL: 'OPERATOR' });\n                _this.SUBRULE1(_this.OR_OP, { LABEL: 'RHS' });\n            });\n        }",
+    "definition": [
+      {
+        "type": "NonTerminal",
+        "name": "AND_OP",
+        "idx": 0
+      },
+      {
+        "type": "Option",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "Or",
+            "label": "||",
+            "idx": 0,
+            "pattern": "\\|\\|"
+          },
+          {
+            "type": "NonTerminal",
+            "name": "OR_OP",
+            "idx": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "AND_OP",
+    "orgText": "function () {\n            _this.SUBRULE(_this.COMPARE_OP, { LABEL: 'LHS' });\n            _this.OPTION(function () {\n                _this.CONSUME(tokens_1.Operators.And, { LABEL: 'OPERATOR' });\n                _this.SUBRULE1(_this.AND_OP, { LABEL: 'RHS' });\n            });\n        }",
+    "definition": [
+      {
+        "type": "NonTerminal",
+        "name": "COMPARE_OP",
+        "idx": 0
+      },
+      {
+        "type": "Option",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "And",
+            "label": "&&",
+            "idx": 0,
+            "pattern": "&&"
+          },
+          {
+            "type": "NonTerminal",
+            "name": "AND_OP",
+            "idx": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "COMPARE_OP",
+    "orgText": "function () {\n            _this.SUBRULE(_this.EQ_OP, { LABEL: 'LHS' });\n            _this.OPTION(function () {\n                _this.CONSUME(tokens_1.Operators.CompareOperator, { LABEL: 'OPERATOR' });\n                _this.SUBRULE1(_this.COMPARE_OP, { LABEL: 'RHS' });\n            });\n        }",
+    "definition": [
+      {
+        "type": "NonTerminal",
+        "name": "EQ_OP",
+        "idx": 0
+      },
+      {
+        "type": "Option",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "CompareOperator",
+            "label": "CompareOperator",
+            "idx": 0,
+            "pattern": "NOT_APPLICABLE"
+          },
+          {
+            "type": "NonTerminal",
+            "name": "COMPARE_OP",
+            "idx": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "EQ_OP",
+    "orgText": "function () {\n            _this.SUBRULE(_this.CONS_OP, { LABEL: 'LHS' });\n            _this.OPTION(function () {\n                _this.CONSUME(tokens_1.Operators.EqualityOperator, { LABEL: 'OPERATOR' });\n                _this.SUBRULE1(_this.EQ_OP, { LABEL: 'RHS' });\n            });\n        }",
+    "definition": [
+      {
+        "type": "NonTerminal",
+        "name": "CONS_OP",
+        "idx": 0
+      },
+      {
+        "type": "Option",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "EqualityOperator",
+            "label": "EqualityOperator",
+            "idx": 0,
+            "pattern": "NOT_APPLICABLE"
+          },
+          {
+            "type": "NonTerminal",
+            "name": "EQ_OP",
+            "idx": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "CONS_OP",
+    "orgText": "function () {\n            _this.SUBRULE(_this.ADD_OP, { LABEL: 'LHS' });\n            _this.OPTION(function () {\n                _this.CONSUME(tokens_1.Operators.Cons, { LABEL: 'OPERATOR' });\n                _this.SUBRULE1(_this.CONS_OP, { LABEL: 'RHS' });\n            });\n        }",
+    "definition": [
+      {
+        "type": "NonTerminal",
+        "name": "ADD_OP",
+        "idx": 0
+      },
+      {
+        "type": "Option",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "Cons",
+            "label": "::",
+            "idx": 0,
+            "pattern": "::"
+          },
+          {
+            "type": "NonTerminal",
+            "name": "CONS_OP",
+            "idx": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "ADD_OP",
+    "orgText": "function () {\n            _this.SUBRULE(_this.MUL_OP, { LABEL: 'LHS' });\n            _this.OPTION(function () {\n                _this.CONSUME(tokens_1.Operators.AdditionOperator, { LABEL: 'OPERATOR' });\n                _this.SUBRULE1(_this.ADD_OP, { LABEL: 'RHS' });\n            });\n        }",
+    "definition": [
+      {
+        "type": "NonTerminal",
+        "name": "MUL_OP",
+        "idx": 0
+      },
+      {
+        "type": "Option",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "AdditionOperator",
+            "label": "AdditionOperator",
+            "idx": 0,
+            "pattern": "NOT_APPLICABLE"
+          },
+          {
+            "type": "NonTerminal",
+            "name": "ADD_OP",
+            "idx": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "MUL_OP",
+    "orgText": "function () {\n            _this.SUBRULE(_this.ATOM_EXPR, { LABEL: 'LHS' });\n            _this.OPTION(function () {\n                _this.CONSUME(tokens_1.Operators.MultiplicationOperator, { LABEL: 'OPERATOR' });\n                _this.SUBRULE1(_this.MUL_OP, { LABEL: 'RHS' });\n            });\n        }",
+    "definition": [
+      {
+        "type": "NonTerminal",
+        "name": "ATOM_EXPR",
+        "idx": 0
+      },
+      {
+        "type": "Option",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "MultiplicationOperator",
+            "label": "MultiplicationOperator",
+            "idx": 0,
+            "pattern": "NOT_APPLICABLE"
+          },
+          {
+            "type": "NonTerminal",
+            "name": "MUL_OP",
+            "idx": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "PAR_EXPR",
+    "orgText": "function () {\n            _this.CONSUME(tokens_1.LPar);\n            _this.SUBRULE1(_this.EXPR);\n            _this.CONSUME(tokens_1.RPar);\n        }",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "LPar",
+        "label": "(",
+        "idx": 0,
+        "pattern": "\\("
+      },
+      {
+        "type": "NonTerminal",
+        "name": "EXPR",
+        "idx": 1
+      },
+      {
+        "type": "Terminal",
+        "name": "RPar",
+        "label": ")",
+        "idx": 0,
+        "pattern": "\\)"
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "ATOM_EXPR",
+    "orgText": "function () {\n            _this.OPTION(function () {\n                _this.CONSUME(tokens_1.Operators.UnaryOperator);\n            });\n            _this.OR([\n                { ALT: function () { return _this.SUBRULE(_this.GETTABLE_EXPR, { LABEL: 'ATOM' }); } },\n                { ALT: function () { return _this.SUBRULE(_this.IF, { LABEL: 'ATOM' }); } },\n                { ALT: function () { return _this.SUBRULE(_this.MATCH, { LABEL: 'ATOM' }); } },\n                { ALT: function () { return _this.SUBRULE(_this.LITERAL, { LABEL: 'ATOM' }); } },\n            ]);\n        }",
+    "definition": [
+      {
+        "type": "Option",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Terminal",
+            "name": "UnaryOperator",
+            "label": "UnaryOperator",
+            "idx": 0,
+            "pattern": "NOT_APPLICABLE"
+          }
+        ]
+      },
+      {
+        "type": "Alternation",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "GETTABLE_EXPR",
+                "idx": 0
+              }
+            ]
+          },
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "IF",
+                "idx": 0
+              }
+            ]
+          },
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "MATCH",
+                "idx": 0
+              }
+            ]
+          },
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "LITERAL",
+                "idx": 0
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "GETTABLE_EXPR",
+    "orgText": "function () {\n            _this.OR([\n                { ALT: function () { return _this.SUBRULE(_this.PAR_EXPR, { LABEL: 'ITEM' }); } },\n                { ALT: function () { return _this.SUBRULE(_this.BLOCK, { LABEL: 'ITEM' }); } },\n                { ALT: function () { return _this.SUBRULE(_this.FUNCTION_CALL, { LABEL: 'ITEM' }); } },\n                { ALT: function () { return _this.SUBRULE(_this.REFERENCE, { LABEL: 'ITEM' }); } }\n            ]);\n            _this.MANY({\n                GATE: function () {\n                    var nextToken = _this.LA(1);\n                    return !(nextToken.image === '[' && nextToken.afterSeparator);\n                },\n                DEF: function () { return _this.OR2([\n                    { ALT: function () { return _this.SUBRULE(_this.LIST_ACCESS); } },\n                    {\n                        ALT: function () {\n                            _this.CONSUME(tokens_1.Dot);\n                            _this.OR1([\n                                { ALT: function () { return _this.SUBRULE1(_this.FUNCTION_CALL); } },\n                                { ALT: function () { return _this.SUBRULE1(_this.IDENTIFIER, { LABEL: 'FIELD_ACCESS' }); } }\n                            ]);\n                        }\n                    }\n                ]); }\n            });\n        }",
+    "definition": [
+      {
+        "type": "Alternation",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "PAR_EXPR",
+                "idx": 0
+              }
+            ]
+          },
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "BLOCK",
+                "idx": 0
+              }
+            ]
+          },
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "FUNCTION_CALL",
+                "idx": 0
+              }
+            ]
+          },
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "REFERENCE",
+                "idx": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Repetition",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Alternation",
+            "idx": 2,
+            "definition": [
+              {
+                "type": "Flat",
+                "definition": [
+                  {
+                    "type": "NonTerminal",
+                    "name": "LIST_ACCESS",
+                    "idx": 0
+                  }
+                ]
+              },
+              {
+                "type": "Flat",
+                "definition": [
+                  {
+                    "type": "Terminal",
+                    "name": "Dot",
+                    "label": ".",
+                    "idx": 0,
+                    "pattern": "\\."
+                  },
+                  {
+                    "type": "Alternation",
+                    "idx": 1,
+                    "definition": [
+                      {
+                        "type": "Flat",
+                        "definition": [
+                          {
+                            "type": "NonTerminal",
+                            "name": "FUNCTION_CALL",
+                            "idx": 1
+                          }
+                        ]
+                      },
+                      {
+                        "type": "Flat",
+                        "definition": [
+                          {
+                            "type": "NonTerminal",
+                            "name": "IDENTIFIER",
+                            "idx": 1
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "LIST_ACCESS",
+    "orgText": "function () {\n            _this.CONSUME(tokens_1.LSquare);\n            _this.OR([\n                { ALT: function () { return _this.CONSUME(tokens_1.IntegerLiteral); } },\n                { ALT: function () { return _this.SUBRULE(_this.REFERENCE); } }\n            ]);\n            _this.CONSUME(tokens_1.RSquare);\n        }",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "LSquare",
+        "label": "[",
+        "idx": 0,
+        "pattern": "\\["
+      },
+      {
+        "type": "Alternation",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "Terminal",
+                "name": "IntegerLiteral",
+                "label": "IntegerLiteral",
+                "idx": 0,
+                "pattern": "0|[1-9]\\d*"
+              }
+            ]
+          },
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "REFERENCE",
+                "idx": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Terminal",
+        "name": "RSquare",
+        "label": "]",
+        "idx": 0,
+        "pattern": "\\]"
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "IF",
+    "orgText": "function () {\n            _this.CONSUME(tokens_1.Keywords.If);\n            _this.SUBRULE(_this.EXPR, { LABEL: 'CONDITION_EXPR' });\n            _this.CONSUME(tokens_1.Keywords.Then);\n            _this.SUBRULE1(_this.EXPR, { LABEL: 'THEN_EXPR' });\n            _this.CONSUME(tokens_1.Keywords.Else);\n            _this.SUBRULE2(_this.EXPR, { LABEL: 'ELSE_EXPR' });\n        }",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "If",
+        "label": "If",
+        "idx": 0,
+        "pattern": "if"
+      },
+      {
+        "type": "NonTerminal",
+        "name": "EXPR",
+        "idx": 0
+      },
+      {
+        "type": "Terminal",
+        "name": "Then",
+        "label": "Then",
+        "idx": 0,
+        "pattern": "then"
+      },
+      {
+        "type": "NonTerminal",
+        "name": "EXPR",
+        "idx": 1
+      },
+      {
+        "type": "Terminal",
+        "name": "Else",
+        "label": "Else",
+        "idx": 0,
+        "pattern": "else"
+      },
+      {
+        "type": "NonTerminal",
+        "name": "EXPR",
+        "idx": 2
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "MATCH",
+    "orgText": "function () {\n            _this.CONSUME(tokens_1.Keywords.Match);\n            _this.SUBRULE(_this.EXPR, { LABEL: 'MATCH_EXPR' });\n            _this.CONSUME(tokens_1.LCurly);\n            _this.AT_LEAST_ONE(function () { return _this.SUBRULE(_this.MATCH_CASE); });\n            _this.CONSUME(tokens_1.RCurly);\n        }",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "Match",
+        "label": "Match",
+        "idx": 0,
+        "pattern": "match"
+      },
+      {
+        "type": "NonTerminal",
+        "name": "EXPR",
+        "idx": 0
+      },
+      {
+        "type": "Terminal",
+        "name": "LCurly",
+        "label": "{",
+        "idx": 0,
+        "pattern": "{"
+      },
+      {
+        "type": "RepetitionMandatory",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "NonTerminal",
+            "name": "MATCH_CASE",
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "type": "Terminal",
+        "name": "RCurly",
+        "label": "}",
+        "idx": 0,
+        "pattern": "}"
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "MATCH_CASE",
+    "orgText": "function () {\n            _this.CONSUME(tokens_1.Keywords.Case);\n            _this.OR([\n                {\n                    ALT: function () {\n                        _this.SUBRULE(_this.IDENTIFIER, { LABEL: 'CASE_VAR' });\n                        _this.CONSUME(tokens_1.Colon);\n                        _this.SUBRULE1(_this.TYPE_REFERENCE, { LABEL: 'CASE_TYPE' });\n                    }\n                },\n                { ALT: function () { return _this.CONSUME(tokens_1.Underscore); } }\n            ]);\n            _this.CONSUME(tokens_1.Arrow);\n            _this.SUBRULE(_this.EXPR, { LABEL: 'CASE_BODY' });\n        }",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "Case",
+        "label": "Case",
+        "idx": 0,
+        "pattern": "case"
+      },
+      {
+        "type": "Alternation",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "IDENTIFIER",
+                "idx": 0
+              },
+              {
+                "type": "Terminal",
+                "name": "Colon",
+                "label": ":",
+                "idx": 0,
+                "pattern": ":"
+              },
+              {
+                "type": "NonTerminal",
+                "name": "TYPE_REFERENCE",
+                "idx": 1
+              }
+            ]
+          },
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "Terminal",
+                "name": "Underscore",
+                "label": "_",
+                "idx": 0,
+                "pattern": "_"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Terminal",
+        "name": "Arrow",
+        "label": "=>",
+        "idx": 0,
+        "pattern": "=>"
+      },
+      {
+        "type": "NonTerminal",
+        "name": "EXPR",
+        "idx": 0
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "FUNCTION_CALL",
+    "orgText": "function () {\n            _this.SUBRULE(_this.IDENTIFIER, { LABEL: 'FUNCTION_NAME' });\n            _this.CONSUME(tokens_1.LPar);\n            _this.MANY_SEP({\n                SEP: tokens_1.Comma,\n                DEF: function () { return _this.SUBRULE(_this.EXPR, { LABEL: 'FUNCTION_ARGS' }); }\n            });\n            _this.CONSUME(tokens_1.RPar);\n        }",
+    "definition": [
+      {
+        "type": "NonTerminal",
+        "name": "IDENTIFIER",
+        "idx": 0
+      },
+      {
+        "type": "Terminal",
+        "name": "LPar",
+        "label": "(",
+        "idx": 0,
+        "pattern": "\\("
+      },
+      {
+        "type": "RepetitionWithSeparator",
+        "idx": 0,
+        "separator": {
+          "type": "Terminal",
+          "name": "Comma",
+          "label": ",",
+          "idx": 1,
+          "pattern": ","
+        },
+        "definition": [
+          {
+            "type": "NonTerminal",
+            "name": "EXPR",
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "type": "Terminal",
+        "name": "RPar",
+        "label": ")",
+        "idx": 0,
+        "pattern": "\\)"
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "LIST_LITERAL",
+    "orgText": "function () {\n            _this.CONSUME(tokens_1.LSquare);\n            _this.MANY_SEP({\n                SEP: tokens_1.Comma,\n                DEF: function () { return _this.SUBRULE(_this.EXPR, { LABEL: 'LIST_ITEMS' }); }\n            });\n            _this.CONSUME(tokens_1.RSquare);\n            _this.OPTION({\n                GATE: function () {\n                    var nextToken = _this.LA(1);\n                    return !(nextToken.image === '[' && nextToken.afterSeparator);\n                },\n                DEF: function () { return _this.SUBRULE(_this.LIST_ACCESS); }\n            });\n        }",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "LSquare",
+        "label": "[",
+        "idx": 0,
+        "pattern": "\\["
+      },
+      {
+        "type": "RepetitionWithSeparator",
+        "idx": 0,
+        "separator": {
+          "type": "Terminal",
+          "name": "Comma",
+          "label": ",",
+          "idx": 1,
+          "pattern": ","
+        },
+        "definition": [
+          {
+            "type": "NonTerminal",
+            "name": "EXPR",
+            "idx": 0
+          }
+        ]
+      },
+      {
+        "type": "Terminal",
+        "name": "RSquare",
+        "label": "]",
+        "idx": 0,
+        "pattern": "\\]"
+      },
+      {
+        "type": "Option",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "NonTerminal",
+            "name": "LIST_ACCESS",
+            "idx": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "LITERAL",
+    "orgText": "function () {\n            _this.OR([\n                { ALT: function () { return _this.CONSUME(tokens_1.IntegerLiteral); } },\n                { ALT: function () { return _this.CONSUME(tokens_1.StringLiteral); } },\n                { ALT: function () { return _this.CONSUME(tokens_1.Base58Literal); } },\n                { ALT: function () { return _this.CONSUME(tokens_1.Base64Literal); } },\n                { ALT: function () { return _this.CONSUME(tokens_1.BooleanLiteral); } },\n                {\n                    ALT: function () { return _this.SUBRULE(_this.LIST_LITERAL); }\n                }\n            ]);\n        }",
+    "definition": [
+      {
+        "type": "Alternation",
+        "idx": 0,
+        "definition": [
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "Terminal",
+                "name": "IntegerLiteral",
+                "label": "IntegerLiteral",
+                "idx": 0,
+                "pattern": "0|[1-9]\\d*"
+              }
+            ]
+          },
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "Terminal",
+                "name": "StringLiteral",
+                "label": "StringLiteral",
+                "idx": 0,
+                "pattern": "\"(\\\\.|[^\"\\\\])*\""
+              }
+            ]
+          },
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "Terminal",
+                "name": "Base58Literal",
+                "label": "Base58Literal",
+                "idx": 0,
+                "pattern": "base58'[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+'"
+              }
+            ]
+          },
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "Terminal",
+                "name": "Base64Literal",
+                "label": "Base64Literal",
+                "idx": 0,
+                "pattern": "base64'[[A-Za-z0-9+\\/=]+'"
+              }
+            ]
+          },
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "Terminal",
+                "name": "BooleanLiteral",
+                "label": "BooleanLiteral",
+                "idx": 0,
+                "pattern": "NOT_APPLICABLE"
+              }
+            ]
+          },
+          {
+            "type": "Flat",
+            "definition": [
+              {
+                "type": "NonTerminal",
+                "name": "LIST_LITERAL",
+                "idx": 0
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "IDENTIFIER",
+    "orgText": "function () {\n            _this.CONSUME(tokens_1.Identifier);\n        }",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "Identifier",
+        "label": "Identifier",
+        "idx": 0,
+        "pattern": "[a-zA-Z]\\w*"
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "REFERENCE",
+    "orgText": "function () {\n            _this.CONSUME(tokens_1.Identifier);\n        }",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "Identifier",
+        "label": "Identifier",
+        "idx": 0,
+        "pattern": "[a-zA-Z]\\w*"
+      }
+    ]
+  },
+  {
+    "type": "Rule",
+    "name": "TYPE_REFERENCE",
+    "orgText": "function () {\n            _this.CONSUME(tokens_1.Identifier);\n        }",
+    "definition": [
+      {
+        "type": "Terminal",
+        "name": "Identifier",
+        "label": "Identifier",
+        "idx": 0,
+        "pattern": "[a-zA-Z]\\w*"
+      }
+    ]
+  }
+];
+</script>
+
+<script>
+    var diagramsDiv = document.getElementById("diagrams");
+    main.drawDiagramsFromSerializedGrammar(serializedGrammar, diagramsDiv);
+</script>

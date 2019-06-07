@@ -1,4 +1,4 @@
-import { IToken, Lexer, tokenMatcher } from 'chevrotain';
+import { createSyntaxDiagramsCode, IToken, Lexer, tokenMatcher } from 'chevrotain';
 import { allTokens, WhiteSpace } from './tokens';
 import * as fs from "fs";
 import { scriptInfo } from '@waves/ride-js';
@@ -24,6 +24,9 @@ export function main (){
         }
     })
 
+    // const s = createSyntaxDiagramsCode(p.getSerializedGastProductions())
+    //
+    // fs.writeFileSync('asd.html', s)
     p.input = tokens;
     console.log('Parser built');
     const cst = info.contentType === 1 ? p.SCRIPT(): p.DAPP();
