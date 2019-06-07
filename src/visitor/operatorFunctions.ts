@@ -18,6 +18,12 @@ const FUNC_EQ = (...types: TTypeRef[]) => ({
     resultType: 'Boolean'
 });
 
+const FUNC_CONS = (...types: TTypeRef[]) => ({
+    name: `FUNC_CONS[${types[0]}]`,
+    args: [types[0], types[1]],
+    resultType: 'Boolean'
+});
+
 const FUNC_GT = ({
     name: 'FUNC_GT',
     args: ['Int', 'Int'],
@@ -85,6 +91,7 @@ export const binaryOperators: Record<string, any> = {
     '&&': FUNC_AND,
     '||': FUNC_OR,
     '==': FUNC_EQ,
+    '::': FUNC_CONS,
     '>': FUNC_GT,
     '<': FUNC_LT,
     '>=': FUNC_GTE,

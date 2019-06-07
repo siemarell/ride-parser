@@ -126,7 +126,7 @@ class RideParser extends Parser {
     public CONS_OP = this.RULE("CONS_OP", () => {
         this.SUBRULE(this.ADD_OP, {LABEL: 'LHS'});
         this.OPTION(() => {
-            this.CONSUME(Operators.Cons);
+            this.CONSUME(Operators.Cons, {LABEL: 'OPERATOR'});
             this.SUBRULE1(this.CONS_OP, {LABEL: 'RHS'});
         });
     });
@@ -251,7 +251,13 @@ class RideParser extends Parser {
             DEF: () => this.SUBRULE(this.EXPR, {LABEL: 'LIST_ITEMS'})
         });
         this.CONSUME(RSquare);
-        this.OPTION(() => this.SUBRULE(this.LIST_ACCESS));
+        this.OPTION({
+            GATE: () => {
+                const nextToken = this.LA(1);
+                return !(nextToken.image === '[' && (nextToken as any).afterSeparator);
+            },
+            DEF: () => this.SUBRULE(this.LIST_ACCESS)
+        });
     });
 
     public LITERAL = this.RULE("LITERAL", () => {
