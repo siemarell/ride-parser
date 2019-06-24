@@ -5,13 +5,14 @@ import {
     getTypes,
     TFunctionArgument,
     TFunction,
-    ISriptInfo
+    ISriptInfo, TList
 } from '@waves/ride-js';
 
 import { rideParser } from '../parser';
 import { SymbolTable } from './SymbolTable';
 import { TypeTable, TTypeRef } from './TypeTable';
 import {
+    isListType,
     TAstNode, TDeclaration,
     TError,
     TFieldAccess, TFunctionArgDeclaration,
@@ -35,6 +36,17 @@ function extractPosition(token: any) {
         endLine: token.endLine,
         startColumn: token.startColumn,
         endColumn: token.endColumn,
+    };
+}
+
+function extractRangePosition(tokenStart: any, tokenEnd: any) {
+    return {
+        startOffset: tokenStart.startOffset,
+        endOffset: tokenEnd.endOffset,
+        startLine: tokenStart.startLine,
+        endLine: tokenEnd.endLine,
+        startColumn: tokenStart.startColumn,
+        endColumn: tokenEnd.endColumn,
     };
 }
 
@@ -112,11 +124,23 @@ export class RideVisitor extends RideVisitorConstructor {
             }
         }
         else if ('fieldAccess' in typelessNode) {
-            const {item, fieldAccess, position} = typelessNode;
+            // const {item, fieldAccess, position} = typelessNode;
+            // const type = ;
+
             // Todo: make field incersection on unions and check types for existance
             return 'DefineType not implemented for FIELD_ACCESS';
         } else if ('listAccess' in typelessNode) {
-            return 'DefineType not implemented for LIST_ACCESS';
+            const {item} = typelessNode;
+            if (Array.isArray(item.type) || !isListType(this.typeTable.getDefinition(item.type))){
+                this.errors.push({
+                    position: item.position,
+                    message: `Item should be of type List[T]. Got ${item.type} instead`
+                });
+                return 'Unknown'
+            }else {
+                const itemType = this.typeTable.getDefinition(item.type) as TList;
+                return itemType.listOf as TTypeRef
+            }
         } else return typelessNode.type;
     }
 
@@ -404,13 +428,22 @@ export class RideVisitor extends RideVisitorConstructor {
 
     LIST_LITERAL(cst: any) {
         const items: TAstNode[] = this.$visitArr(cst.LIST_ITEMS);
-        const argsType = TypeTable.union(items.map(x => x.type))
+        const argsType = TypeTable.union(items.map(x => x.type));
+        const typeName = `LIST[${argsType}]`;
 
-        return {
-            position: null,
+        if (this.typeTable.getDefinition(typeName) == null){
+            this.typeTable.addDefinition(typeName, {listOf: argsType})
+        }
+
+        const listLiteral = {
+            position: extractRangePosition(cst.LSquare[0], cst.RSquare[0]),
             items,
             type: `LIST[${argsType}]`,
         };
+
+        if ('LIST_ACCESS' in cst){
+            return this.LIST_ACCESS(cst.LIST_ACCESS[0].children, listLiteral as any)
+        }else return listLiteral
     }
 
     LIST_ACCESS(cst: any, node: TAstNode): TListAccess {

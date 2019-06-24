@@ -8,7 +8,7 @@ import { RideVisitor } from './visitor';
 export function main (){
     const lexer = new Lexer(allTokens)
 
-    const text = fs.readFileSync('assets/fomo.ride', {encoding: 'utf-8'});
+    const text = fs.readFileSync('assets/listaccess.ride', {encoding: 'utf-8'});
     const info = scriptInfo(text);
 
     let lexingResult = lexer.tokenize(text);
@@ -30,6 +30,7 @@ export function main (){
     p.input = tokens;
     console.log('Parser built');
     const cst = info.contentType === 1 ? p.SCRIPT(): p.DAPP();
+    // console.dir(cst, {depth: null});
     console.log(p.errors)
     const rideVisitor = new RideVisitor(info);
 

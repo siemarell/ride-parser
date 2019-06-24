@@ -1,4 +1,7 @@
 import { TTypeRef } from './TypeTable';
+import { TList, TType } from '@waves/ride-js';
+
+export const isListType = (t?: TType | null): t is TList => t != null && typeof t === 'object' && 'listOf' in t;
 
 // Metadata types
 export type TError = {
@@ -31,6 +34,7 @@ export type TLiteral = {
 }
 
 export type TListLiteral = {
+    position: TPos,
     items: TAstNode[],
     type: TTypeRef
 }

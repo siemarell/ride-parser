@@ -43,3 +43,6 @@ func withdraw() = {
 		then TransferSet([ScriptTransfer(i.caller, wavesBalance(this), unit)])
 		else throw("behold")
 }
+
+@Callable(i)
+func test() = [1,2,3,4,5][0]
