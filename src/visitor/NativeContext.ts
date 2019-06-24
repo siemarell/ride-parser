@@ -2,6 +2,7 @@ import { getFunctionsDoc, getTypes, getVarsDoc, ISriptInfo, TFunction, TStruct, 
 import { TDeclaration, TFunctionDeclaration, TVaribleDeclaration } from './types';
 import { binaryOperators, unaryOperators } from './operatorFunctions';
 import { TTypeRef } from './TypeTable';
+import { isStructType, typeToTypeRef } from './typeUtils';
 
 const globalSymbols: Record<string, TDeclaration> = {...binaryOperators, ...unaryOperators};
 
@@ -37,7 +38,7 @@ export class NativeContext {
         const tDocs = getTypes(info.stdLibVersion, info.scriptType === 2);
         const typeConstructors = tDocs
             .map(x => x.type)
-            .filter(isTStruct)
+            .filter(isStructType)
             .map((x) => ({
                     name: x.typeName,
                     args: x.fields.map(x => ({...x, type: typeToTypeRef(x.type)})),
@@ -79,11 +80,3 @@ Object.defineProperty(Array.prototype, 'flat', {
     }
 });
 
-function typeToTypeRef(x: TType): TTypeRef {
-    if (typeof x === 'string') return x;
-    else if (Array.isArray(x)) return x.map(typeToTypeRef).flat();
-    else if ('listOf' in x) return `List[${typeToTypeRef(x.listOf)}]`;
-    else return x.typeName;
-}
-
-const isTStruct = (item: TType): item is TStruct => typeof item !== 'string' && !Array.isArray(item);

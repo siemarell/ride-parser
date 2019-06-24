@@ -1,4 +1,6 @@
+import { intersectionWith,reduce } from 'ramda';
 import { TType, TStructField, ISriptInfo, getTypes } from '@waves/ride-js';
+import { isStructType } from './typeUtils';
 
 export type TTypeRef = string | string[]
 
@@ -13,7 +15,7 @@ export class TypeTable {
             const tTable = new TypeTable();
             const tDocs = getTypes(info.stdLibVersion, info.scriptType === 2);
             tDocs.forEach(({name, type}) => tTable.addDefinition(name, type));
-            this._instances[key] = tTable
+            this._instances[key] = tTable;
         }
         return this._instances[key];
     }
@@ -46,4 +48,16 @@ export class TypeTable {
         return this._values[name] || null;
     }
 
+    getTypeFields(type: TTypeRef): TStructField[] {
+        const arg = Array.isArray(type) ? type.map(this._getTypeFields) : [this._getTypeFields(type)];
+        if (arg.length === 1) return arg[0];
+        return arg.slice(1).reduce((acc, item) => intersectionWith((a,b) => a.name === b.name ,acc, item), arg[0]);
+
+    }
+
+    private _getTypeFields(type: string): TStructField[] {
+        const t = this.getDefinition(type);
+        if (isStructType(t)) return t.fields;
+        return []
+    }
 }

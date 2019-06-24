@@ -12,7 +12,6 @@ import { rideParser } from '../parser';
 import { SymbolTable } from './SymbolTable';
 import { TypeTable, TTypeRef } from './TypeTable';
 import {
-    isListType,
     TAstNode, TDeclaration,
     TError,
     TFieldAccess, TFunctionArgDeclaration,
@@ -25,6 +24,7 @@ import {
 import { CstNode } from 'chevrotain';
 import { NativeContext } from './NativeContext';
 import { IntegerLiteral } from '../tokens';
+import { isListType, typeToTypeRef } from './typeUtils';
 
 const RideVisitorConstructor = rideParser.getBaseCstVisitorConstructor();
 
@@ -124,11 +124,18 @@ export class RideVisitor extends RideVisitorConstructor {
             }
         }
         else if ('fieldAccess' in typelessNode) {
-            // const {item, fieldAccess, position} = typelessNode;
-            // const type = ;
-
-            // Todo: make field incersection on unions and check types for existance
-            return 'DefineType not implemented for FIELD_ACCESS';
+            const {item, fieldAccess, position} = typelessNode;
+            const availableFields = this.typeTable.getTypeFields(item.type);
+            const field = availableFields.find(field => field.name === fieldAccess);
+            if (field == null){
+                this.errors.push({
+                    position,
+                    message: `Field "${fieldAccess}" does not exist on type "${item.type}"`
+                });
+                return 'Unknown'
+            }else {
+                return typeToTypeRef(field.type)
+            }
         } else if ('listAccess' in typelessNode) {
             const {item} = typelessNode;
             if (Array.isArray(item.type) || !isListType(this.typeTable.getDefinition(item.type))){
